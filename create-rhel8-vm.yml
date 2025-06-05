@@ -3,6 +3,9 @@
   hosts: all
   vars_files:
     - vars.yml
+  collections:
+    - community.general
+
   tasks:
     - name: Create host on Satellite
       community.general.hammer:
