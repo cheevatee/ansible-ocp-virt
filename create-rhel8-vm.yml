@@ -4,7 +4,19 @@
   vars_files:
     - vars.yml
   tasks:
-    - name: "Create VirtualMachine"
+    - name: Create host on Satellite
+      community.general.hammer:
+        command: host create
+        args:
+          - "--name={{ name }}"
+          - "--organization=Default Organization"
+          - "--location=Default Location"
+          - "--hostgroup=Default Host Group"
+          - "--interface=managed=false,provision=false"
+          - "--build=false"
+          - "--managed=false"
+
+    - name: Create VirtualMachine
       kubernetes.core.k8s:
         state: present
         template: virtualmachine.yml.j2
