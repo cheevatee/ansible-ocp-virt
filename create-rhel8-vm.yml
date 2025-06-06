@@ -19,7 +19,7 @@
 
     - name: Set activationkey as comma-separated string
       ansible.builtin.set_fact:
-        activationkey: "{{ activationkey_list
+        activationkey: "{{ host_activationkey
                           | replace('[', '')
                           | replace(']', '')
                           | replace(\"'\", '')
@@ -65,7 +65,7 @@
               manage_etc_hosts: true
               runcmd:
                 - rpm -Uvh {{ ansible_env.FOREMAN_HOST }}/pub/katello-ca-consumer-latest.noarch.rpm
-                - subscription-manager register --name="{{ name }}.{{ fqdn }}" --org="{{ host_organization | replace(' ', '_') }}" --activationkey="{{ host_activationkey }}"
+                - subscription-manager register --name="{{ name }}.{{ fqdn }}" --org="{{ host_organization | replace(' ', '_') }}" --activationkey="{{ activationkey }}"
 
     - name: Create VirtualMachine
       kubernetes.core.k8s:
