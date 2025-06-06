@@ -22,7 +22,7 @@
         server_url:  "{{ ansible_env.FOREMAN_HOST }}"
         username:    "{{ ansible_env.FOREMAN_USERNAME }}"
         password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
-        name: "{{ name }}"
+        name: "{{ name }}.{{ fqdn }}"
         organization: "{{ host_organization }}"
         location: "{{ host_location }}"
         hostgroup: "{{ host_hostgroup }}"
