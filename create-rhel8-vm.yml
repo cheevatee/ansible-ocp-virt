@@ -9,14 +9,6 @@
     - name: Print the entire ansible_env dictionary
       debug:
         var: ansible_env
-
-    - name: Print all SATELLITE environment vars
-      debug:
-        msg:
-          - "SATELLITE_HOST     = {{ lookup('env','SATELLITE_HOST')     }}"
-          - "SATELLITE_USERNAME = {{ lookup('env','SATELLITE_USERNAME') }}"
-          - "SATELLITE_PASSWORD = {{ lookup('env','SATELLITE_PASSWORD') }}"
-          - "SATELLITE_VERIFY_SSL = {{ lookup('env','SATELLITE_VERIFY_SSL') }}"
   
     - name: Debug show injected Satellite env vars
       debug:
