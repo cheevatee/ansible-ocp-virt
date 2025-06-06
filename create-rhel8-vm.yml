@@ -55,6 +55,9 @@
               hostname: "{{ name }}"
               fqdn: "{{ name }}.{{ fqdn }}"
               manage_etc_hosts: true
+              runcmd:
+                - rpm -Uvh "{{ ansible_env.FOREMAN_HOST }}"/pub/katello-ca-consumer-latest.noarch.rpm
+                - subscription-manager register --name="{{ name }}.{{ fqdn }}" --org="{{ host_organization }}" --activationkey="{{ host_activationkey }}"
 
     - name: Create VirtualMachine
       kubernetes.core.k8s:
