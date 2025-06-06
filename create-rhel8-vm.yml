@@ -1,11 +1,15 @@
 ---
 - name: "install rhel8 vm"
   hosts: all
+  gather_facts: yes
   vars_files:
     - vars.yml
 
   tasks:
-
+    - name: Print the entire ansible_env dictionary
+      debug:
+        var: ansible_env
+        
     - name: Show what environment variables are available (for debugging)
       debug:
         msg:
