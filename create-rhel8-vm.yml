@@ -5,6 +5,14 @@
     - vars.yml
 
   tasks:
+
+    - name: Show what environment variables are available (for debugging)
+      debug:
+        msg:
+          - "FOREMAN_HOST={{ lookup('env','FOREMAN_HOST') }}"
+          - "FOREMAN_USERNAME={{ lookup('env','FOREMAN_USERNAME') }}"
+          - "FOREMAN_PASSWORD={{ lookup('env','FOREMAN_PASSWORD') }}"
+
     - name: Create host in Satellite
       theforeman.foreman.host:
         server_url: "{{ lookup('env','FOREMAN_HOST') }}"
