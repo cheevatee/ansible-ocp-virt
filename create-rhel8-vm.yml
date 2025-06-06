@@ -37,6 +37,25 @@
       debug:
         var: created_host
 
+    - name: Create cloud-init secret
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: cloud-init-"{{ name }}"
+            namespace: "{{ namespace }}"
+          stringData:
+            userData: |-
+              #cloud-config
+              user: "{{ username }}"
+              password: "{{ password }}"
+              chpasswd: { expire: False }
+              hostname: "{{ name }}"
+              fqdn: "{{ name }}"
+              manage_etc_hosts: true
+
     - name: Create VirtualMachine
       kubernetes.core.k8s:
         state: present
