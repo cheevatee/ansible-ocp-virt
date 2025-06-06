@@ -7,6 +7,9 @@
   tasks:
     - name: Create host in Satellite
       theforeman.foreman.host:
+        server_url: "{{ lookup('env','FOREMAN_HOST') }}"
+        username:   "{{ lookup('env','FOREMAN_USERNAME') }}"
+        password:   "{{ lookup('env','FOREMAN_PASSWORD') }}"
         name: "{{ name }}"
         organization: "{{ host_organization }}"
         location: "{{ host_location }}"
