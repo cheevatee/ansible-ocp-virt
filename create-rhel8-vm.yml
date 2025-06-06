@@ -10,7 +10,7 @@
       debug:
         var: ansible_env
         
-    - name: Debug: show injected Satellite env vars
+    - name: Debug show injected Satellite env vars
       debug:
         msg:
           - "FOREMAN_HOST      = {{ ansible_env.FOREMAN_HOST | default('undefined') }}"
