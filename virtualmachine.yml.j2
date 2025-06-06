@@ -77,5 +77,5 @@ spec:
         name: 'rootdisk'
       - cloudInitNoCloud:
           secretRef:
-            name: {{ cloud_init_secret }}
+            name: cloud-init-{{ name }}
         name: cloudinitdisk
