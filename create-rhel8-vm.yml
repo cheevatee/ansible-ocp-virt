@@ -53,7 +53,7 @@
               password: "{{ password }}"
               chpasswd: { expire: False }
               hostname: "{{ name }}"
-              fqdn: "{{ name }}"
+              fqdn: "{{ name }}.{{ fqdn }}"
               manage_etc_hosts: true
 
     - name: Create VirtualMachine
