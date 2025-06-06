@@ -7,7 +7,6 @@
   tasks:
     - name: Create host in Satellite
       theforeman.foreman.host:
-        server_url: "{{ server_url }}"
         name: "{{ name }}"
         organization: "{{ host_organization }}"
         location: "{{ host_location }}"
