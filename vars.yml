@@ -13,7 +13,7 @@ vm_memory_requests: '2Gi'
 cloud_init_secret: cloud-init
 username: "cloud-user"
 password: "r3dh4t1!"
-host_organization: "Default Organization"
-host_location: "Default Location"
-host_hostgroup: "Default Host Group"
+host_organization: "Default_Organization"
+host_location: "Default_Location"
+host_hostgroup: "Default_Host_Group"
 host_activationkey: "RHEL8_Dev,RHEL7_Dev"
