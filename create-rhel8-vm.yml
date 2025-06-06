@@ -17,6 +17,14 @@
           - "FOREMAN_USERNAME  = {{ ansible_env.FOREMAN_USERNAME | default('undefined') }}"
           - "FOREMAN_PASSWORD  = {{ ansible_env.FOREMAN_PASSWORD | default('undefined') }}"
 
+    - name: Set activationkey as comma-separated string
+      ansible.builtin.set_fact:
+        activationkey: "{{ activationkey_list
+                          | replace('[', '')
+                          | replace(']', '')
+                          | replace(\"'\", '')
+                          | replace(', ', ',') }}"
+                          
     - name: Create host in Satellite
       theforeman.foreman.host:
         server_url:  "{{ ansible_env.FOREMAN_HOST }}"
@@ -56,7 +64,7 @@
               fqdn: "{{ name }}.{{ fqdn }}"
               manage_etc_hosts: true
               runcmd:
-                - rpm -Uvh "{{ ansible_env.FOREMAN_HOST }}"/pub/katello-ca-consumer-latest.noarch.rpm
+                - rpm -Uvh {{ ansible_env.FOREMAN_HOST }}/pub/katello-ca-consumer-latest.noarch.rpm
                 - subscription-manager register --name="{{ name }}.{{ fqdn }}" --org="{{ host_organization | replace(' ', '_') }}" --activationkey="{{ host_activationkey }}"
 
     - name: Create VirtualMachine
