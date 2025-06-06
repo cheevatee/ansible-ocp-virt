@@ -10,18 +10,18 @@
       debug:
         var: ansible_env
         
-    - name: Show what environment variables are available (for debugging)
+    - name: Debug: show injected Satellite env vars
       debug:
         msg:
-          - "FOREMAN_HOST={{ lookup('env','FOREMAN_HOST') }}"
-          - "FOREMAN_USERNAME={{ lookup('env','FOREMAN_USERNAME') }}"
-          - "FOREMAN_PASSWORD={{ lookup('env','FOREMAN_PASSWORD') }}"
+          - "FOREMAN_HOST      = {{ ansible_env.FOREMAN_HOST | default('undefined') }}"
+          - "FOREMAN_USERNAME  = {{ ansible_env.FOREMAN_USERNAME | default('undefined') }}"
+          - "FOREMAN_PASSWORD  = {{ ansible_env.FOREMAN_PASSWORD | default('undefined') }}"
 
     - name: Create host in Satellite
       theforeman.foreman.host:
-        server_url: "{{ lookup('env','FOREMAN_HOST') }}"
-        username:   "{{ lookup('env','FOREMAN_USERNAME') }}"
-        password:   "{{ lookup('env','FOREMAN_PASSWORD') }}"
+        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
+        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
+        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
         name: "{{ name }}"
         organization: "{{ host_organization }}"
         location: "{{ host_location }}"
