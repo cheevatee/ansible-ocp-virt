@@ -3,21 +3,24 @@
   hosts: all
   vars_files:
     - vars.yml
-  collections:
-    - community.general
 
   tasks:
-    - name: Create host on Satellite
-      community.general.hammer:
-        command: host create
-        args:
-          - "--name={{ name }}"
-          - "--organization=Default Organization"
-          - "--location=Default Location"
-          - "--hostgroup=Default Host Group"
-          - "--interface=managed=false,provision=false"
-          - "--build=false"
-          - "--managed=false"
+    - name: Create host in Satellite
+      theforeman.foreman.host:
+        name: "{{ name }}"
+        organization: "{{ host_organization }}"
+        location: "{{ host_location }}"
+        hostgroup: "{{ host_hostgroup }}"
+        build: false
+        managed: false
+        interfaces_attributes:
+          - managed: false
+            provision: false
+      register: created_host
+
+    - name: Display created host details
+      debug:
+        var: created_host
 
     - name: Create VirtualMachine
       kubernetes.core.k8s:
