@@ -10,6 +10,7 @@ vm_cpus_threads: 1
 #vm_machine_type: 'pc-q35-rhel9.4.0'
 vm_memory_requests: '2Gi'
 cloud_init_secret: cloud-init
+server_url: "https://satellite.6grgv.sandbox770.opentlc.com"
 host_organization: "Default Organization"
 host_location: "Default Location"
 host_hostgroup: "Default Host Group"
