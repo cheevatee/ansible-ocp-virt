@@ -9,6 +9,14 @@
     net_attach_def: "[]"      # Could be "", a list, or a comma-separated string
 
   tasks:
+      - block:
+        - name: No attachments defined, create VM only
+          ansible.builtin.debug:
+            msg: "Create VM completed"
+        - name: Exit play when no attachments
+          meta: end_play
+      when: attach_list == ''
+      
     - name: Print original net_attach_def
       ansible.builtin.debug:
         var: net_attach_def
@@ -20,14 +28,6 @@
     - name: Print normalized attach_list
       ansible.builtin.debug:
         var: attach_list
-
-    - block:
-        - name: No attachments defined, create VM only
-          ansible.builtin.debug:
-            msg: "Create VM completed"
-        - name: Exit play when no attachments
-          meta: end_play
-      when: attach_list == ''
 
     - name: Turn attach_list string into list
       ansible.builtin.set_fact:
