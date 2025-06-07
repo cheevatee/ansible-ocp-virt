@@ -98,7 +98,6 @@
             definition:
               spec:
                 runStrategy: Always
-      when: patch_results.changed
       register: restart_runstrategy
 
     - name: Wait for VM to be Running
