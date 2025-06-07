@@ -20,29 +20,23 @@
       ansible.builtin.debug:
         var: net_attach_def
 
-    - name: Normalize attach_list to comma-separated string
+    - name: Normalize attach_list_str
       ansible.builtin.set_fact:
-        attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or ((net_attach_def|string) | trim('[] ')) }}"
-
-    - name: Print normalized attach_list_str
-      ansible.builtin.debug:
-        var: attach_list_str
+        attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
 
     - name: Turn attach_list_str into list
       ansible.builtin.set_fact:
-        attach_list_list: "{{ attach_list_str.split(',') }}"
-
-    - name: Print attach_list_list
-      ansible.builtin.debug:
-        var: attach_list_list
+        attach_list_list: "{{ attach_list_str == '' and [] or attach_list_str.split(',') }}"
 
     - name: Derive interface names
       ansible.builtin.set_fact:
         interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
 
-    - name: Print interface_names
+    - name: Print attach_list_list and interface_names
       ansible.builtin.debug:
-        var: interface_names
+        msg:
+          - "attach_list_list={{ attach_list_list }}"
+          - "interface_names={{ interface_names }}"
 
     - name: Add network interfaces
       kubernetes.core.k8s:
@@ -50,8 +44,8 @@
         kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        merge_type:
-          - strategic-merge
+        apply: yes
+        force: yes
         definition:
           spec:
             template:
@@ -81,6 +75,8 @@
         kind: VirtualMachineInstanceMigration
         state: present
         namespace: "{{ namespace }}"
+        apply: yes
+        force: yes
         definition:
           metadata:
             name: "{{ name }}-migration"
