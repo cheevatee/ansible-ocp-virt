@@ -5,19 +5,17 @@
   vars:
     name: test01            # VM name
     namespace: vms          # VM namespace
-    net_attach_def: "[]"    # Could be "", a single def, or a Python-list string
-
-  pre_tasks:
-    - name: No attachments defined, print completion message
-      ansible.builtin.debug:
-        msg: "Create VM completed"
-      when: net_attach_def == '' or net_attach_def == '[]'
-
-    - name: Exit play if no network attachments defined
-      meta: end_play
-      when: net_attach_def == '' or net_attach_def == '[]'
+    net_attach_def: "[]"  # Could be "", a single def, or a Python-list string
 
   tasks:
+    - block:
+        - name: No attachments defined, create VM only
+          ansible.builtin.debug:
+            msg: "Create VM completed"
+        - name: Exit play when no attachments
+          meta: end_play
+      when: net_attach_def == '' or net_attach_def == '[]'
+
     - name: Parse network attachments into a list
       ansible.builtin.set_fact:
         attach_list: >-
