@@ -88,4 +88,3 @@
       ansible.builtin.debug:
         msg:
           - "Delete VMI result: {{ delete_vmi }}"
-          - "New VMI status: {{ vmi_info_start.resources[0].status.phase }}"
