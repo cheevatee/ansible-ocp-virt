@@ -8,6 +8,11 @@
     net_attach_def: "[]"    # Could be "", a single def, or a Python-list string
 
   pre_tasks:
+    - name: No attachments defined, print completion message
+      ansible.builtin.debug:
+        msg: "Create VM completed"
+      when: net_attach_def == '' or net_attach_def == '[]'
+
     - name: Exit play if no network attachments defined
       meta: end_play
       when: net_attach_def == '' or net_attach_def == '[]'
@@ -75,3 +80,4 @@
     - name: Show migration result
       ansible.builtin.debug:
         var: migration_result
+      when: migration_result is defined
