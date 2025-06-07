@@ -75,7 +75,7 @@
             template:
               metadata:
                 annotations:
-                  kubevirt.io/restartTimestamp: "{{ '%Y-%m-%dT%H:%M:%SZ' | strftime(utcnow()) }}"
+                  kubevirt.io/restartTimestamp: "{{ now('utc').strftime('%Y-%m-%dT%H:%M:%SZ') }}"
       register: restart_annotation
 
     - name: Wait for VM instance to restart and be Running
