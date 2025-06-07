@@ -71,22 +71,21 @@
         state: absent
       register: delete_vmi
 
-    - name: Wait for new VMI to start and be Running
+    - name: Wait for VM to be Running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
-      register: vmi_info_start
-      until: vmi_info_start.resources | length > 0 and vmi_info_start.resources[0].status.phase == 'Running'
-      retries: 20
-      delay: 6
+      register: vmi_running
+      until: vmi_running.resources | length > 0 and vmi_running.resources[0].status.phase == 'Running'
+      retries: 30
+      delay: 5
 
-    - name: Confirm VM restart via VMI deletion
+    - name: Confirm VM is Running
+      ansible.builtin.debug:
+        msg: "VM '{{ name }}' is now {{ vmi_running.resources[0].status.phase }}"
       ansible.builtin.debug:
         msg:
           - "Delete VMI result: {{ delete_vmi }}"
           - "New VMI status: {{ vmi_info_start.resources[0].status.phase }}"
-      ansible.builtin.debug:
-        msg:
-          - "VM Status after restart: {{ vmi_restart_info.resources[0].status.phase }}"
