@@ -86,7 +86,7 @@
       ansible.builtin.debug:
         msg: "VM '{{ name }}' is now {{ vmi_running.resources[0].status.phase }}"
       ansible.builtin.debug:
-        msg: "Create VM completed"
-      ansible.builtin.debug:
         msg:
           - "Delete VMI result: {{ delete_vmi }}"
+      ansible.builtin.debug:
+        msg: "Create VM completed"
