@@ -71,17 +71,6 @@
         state: absent
       register: delete_vmi
 
-    - name: Wait for VMI to be terminated
-      kubernetes.core.k8s_info:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
-        namespace: "{{ namespace }}"
-        name: "{{ name }}"
-      register: vmi_info_stop
-      until: vmi_info_stop.resources | length == 0
-      retries: 10
-      delay: 6
-
     - name: Wait for new VMI to start and be Running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
