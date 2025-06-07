@@ -1,6 +1,6 @@
 ---
 - name: Add network interface(s) to a KubeVirt VM and migrate after completion
-  hosts: localhost
+  hosts: all
   gather_facts: false
   vars:
     name: test01            # VM name
