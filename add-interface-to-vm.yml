@@ -62,38 +62,58 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Delete running VMI to trigger VM restart
+    - name: Gracefully stop the VM (running=false)
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
+        kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        state: absent
+        merge_type:
+          - strategic-merge
+        definition:
+          spec:
+            running: false
       when: patch_results.changed
-      register: restart_delete
+      register: shutdown_result
 
-    - name: Wait for old VMI to be removed
+    - name: Wait until VMI is terminated
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
-      register: delete_info
-      until: delete_info.resources | length == 0
+      register: vmi_info_stop
+      until: vmi_info_stop.resources | length == 0
       retries: 10
-      delay: 3
+      delay: 6
 
-    - name: Wait for new VMI to appear and be Running
+    - name: Start the VM (running=true)
+      kubernetes.core.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+        merge_type:
+          - strategic-merge
+        definition:
+          spec:
+            running: true
+      register: start_result
+
+    - name: Wait for VMI to be Running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
-      register: vmi_info
-      until: vmi_info.resources and vmi_info.resources[0].status.phase == 'Running'
+      register: vmi_info_start
+      until: vmi_info_start.resources[0].status.phase == 'Running'
       retries: 20
       delay: 6
 
-    - name: Confirm VM is up and running after restart
+    - name: Confirm VM restart status
       ansible.builtin.debug:
-        msg: "VM '{{ name }}' status: {{ vmi_info.resources[0].status.phase }}"
+        msg:
+          - "Shutdown result: {{ shutdown_result }}"
+          - "Start result: {{ start_result }}"
+          - "VM Status: {{ vmi_info_start.resources[0].status.phase }}"
