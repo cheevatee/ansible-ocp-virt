@@ -68,8 +68,8 @@
         kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        merge_type:
-          - strategic-merge
+        server_side_apply: yes
+        force: yes
         definition:
           spec:
             template:
