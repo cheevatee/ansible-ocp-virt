@@ -98,7 +98,8 @@
             definition:
               spec:
                 runStrategy: Always
-      register: restart_runstrategy
+          register: restart_result
+      when: true
 
     - name: Wait for VM to be Running
       kubernetes.core.k8s_info:
@@ -114,5 +115,5 @@
     - name: Confirm VM restart status
       ansible.builtin.debug:
         msg:
-          - "Restart via runStrategy result: {{ restart_runstrategy }}"
+          - "Restart via runStrategy result: {{ restart_result }}"
           - "VM Status after restart: {{ vmi_restart_info.resources[0].status.phase }}"
