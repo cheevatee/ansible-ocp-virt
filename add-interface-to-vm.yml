@@ -5,29 +5,27 @@
   vars:
     name: test01            # VM name
     namespace: vms          # VM namespace
-    net_attach_def: "[]"  # Could be "", a single def, or a Python-list string
+    net_attach_def: "[]"    # Could be "", a single def, or a Python-list string
+
+  pre_tasks:
+    - name: Exit play if no network attachments defined
+      meta: end_play
+      when: net_attach_def == '' or net_attach_def == '[]'
 
   tasks:
     - name: Parse network attachments into a list
       ansible.builtin.set_fact:
         attach_list: >-
           {% set val = net_attach_def | trim %}
-          {% if val == '' or val == '[]' %}
-          []
-          {% elif val[0] == '[' and val[-1] == ']' %}
+          {% if val.startswith('[') and val.endswith(']') %}
           {{ val | from_yaml }}
           {% else %}
           ["{{ val }}"]
           {% endif %}
 
-    - name: End play if no network attachments defined
-      meta: end_play
-      when: attach_list | length == 0
-
     - name: Derive interface names
       ansible.builtin.set_fact:
         interface_names: "{{ attach_list | map('split','/') | map('last') | list }}"
-      when: attach_list | length > 0
 
     - name: Add network interfaces
       kubernetes.core.k8s:
@@ -55,12 +53,10 @@
       loop_control:
         label: "{{ item.1 }}"
       register: patch_results
-      when: attach_list | length > 0
 
     - name: Show patch results
       ansible.builtin.debug:
         var: patch_results
-      when: patch_results is defined and patch_results is not skipped
 
     - name: Migrate VM after interfaces added
       kubernetes.core.k8s:
@@ -73,10 +69,9 @@
             name: "{{ name }}-migration"
           spec:
             vmiName: "{{ name }}"
-      when: patch_results is defined and patch_results.changed
+      when: patch_results.changed
       register: migration_result
 
     - name: Show migration result
       ansible.builtin.debug:
         var: migration_result
-      when: migration_result is defined
