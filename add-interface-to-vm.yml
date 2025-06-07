@@ -16,10 +16,6 @@
           meta: end_play
       when: net_attach_def == '' or net_attach_def == '[]'
 
-    - name: Print original net_attach_def
-      ansible.builtin.debug:
-        var: net_attach_def
-
     - name: Normalize attach_list_str
       ansible.builtin.set_fact:
         attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
@@ -32,44 +28,37 @@
       ansible.builtin.set_fact:
         interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
 
-    - name: Print attach_list_list and interface_names
+    - name: Print planned attachments
       ansible.builtin.debug:
         msg:
-          - "attach_list_list={{ attach_list_list }}"
-          - "interface_names={{ interface_names }}"
+          - "net_attach_def: {{ net_attach_def }}"
+          - "attachments: {{ attach_list_list }}"
+          - "interfaces: {{ interface_names }}"
 
-    - name: Add network interfaces
-      kubernetes.core.k8s:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        merge_type:
-          - strategic-merge
-        definition:
-          spec:
-            template:
-              spec:
-                domain:
-                  devices:
-                    interfaces:
-                      - name: "{{ item.1 }}"
-                        bridge: {}
-                        model: virtio
-                networks:
-                  - name: "{{ item.1 }}"
-                    multus:
-                      networkName: "{{ item.0 }}"
+    - name: Add network interface(s) via oc patch
+      ansible.builtin.shell: |
+        oc patch virtualmachine {{ name }} -n {{ namespace }} --type=json -p='[
+          {"op":"add","path":"/spec/template/spec/networks/-","value":
+            {"name":"{{ interface_name }}","multus":{"networkName":"{{ net_attach }}"}}},
+          {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/-","value":
+            {"name":"{{ interface_name }}","bridge":{},"model":"virtio"}}
+        ]'
+      args:
+        warn: false
       loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
-        label: "{{ item.1 }}"
+        loop_var: pair
+        label: "{{ pair[1] }}"
+      vars:
+        net_attach: "{{ pair[0] }}"
+        interface_name: "{{ pair[1] }}"
       register: patch_results
 
     - name: Show patch results
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Migrate VM after interfaces added
+    - name: Trigger live migration to apply changes
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstanceMigration
