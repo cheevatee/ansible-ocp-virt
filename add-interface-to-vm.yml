@@ -62,19 +62,15 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Gracefully stop the VM (running=false)
+    - name: Delete the current VMI to trigger reboot
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
-        kind: VirtualMachine
+        kind: VirtualMachineInstance
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        merge_type:
-          - strategic-merge
-        definition:
-          spec:
-            running: false
+        state: absent
       when: patch_results.changed
-      register: shutdown_result
+      register: delete_vmi_result
 
     - name: Wait until VMI is terminated
       kubernetes.core.k8s_info:
@@ -87,33 +83,23 @@
       retries: 10
       delay: 6
 
-    - name: Start the VM (running=true)
-      kubernetes.core.k8s:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        merge_type:
-          - strategic-merge
-        definition:
-          spec:
-            running: true
-      register: start_result
-
-    - name: Wait for VMI to be Running
+    - name: Wait for new VMI to be created and running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
       register: vmi_info_start
-      until: vmi_info_start.resources[0].status.phase == 'Running'
+      until: vmi_info_start.resources | length > 0 and vmi_info_start.resources[0].status.phase == 'Running'
       retries: 20
       delay: 6
 
     - name: Confirm VM restart status
       ansible.builtin.debug:
         msg:
-          - "Shutdown result: {{ shutdown_result }}"
-          - "Start result: {{ start_result }}"
-          - "VM Status: {{ vmi_info_start.resources[0].status.phase }}"
+          - "Delete VMI result: {{ delete_vmi_result }}"
+          - "VM Status after reboot: {{ vmi_info_start.resources[0].status.phase }}"
+      ansible.builtin.debug:
+        msg:
+          - "Delete VMI result: {{ delete_vmi_result }}"
+          - "VM Status after reboot: {{ vmi_info_start.resources[0].status.phase }}"
