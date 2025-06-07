@@ -53,17 +53,17 @@
                 domain:
                   devices:
                     interfaces:
-                      {% for idx in range(attach_list_list|length) %}
-                      - name: "{{ interface_names[idx] }}"
-                        bridge: {}
-                        model: virtio
-                      {% endfor %}
+{% for idx in range(attach_list_list|length) %}
+  - name: "{{ interface_names[idx] }}"
+    bridge: {}
+    model: virtio
+{% endfor %}
                 networks:
-                  {% for idx in range(attach_list_list|length) %}
-                  - name: "{{ interface_names[idx] }}"
-                    multus:
-                      networkName: "{{ attach_list_list[idx] }}"
-                  {% endfor %}
+{% for idx in range(attach_list_list|length) %}
+  - name: "{{ interface_names[idx] }}"
+    multus:
+      networkName: "{{ attach_list_list[idx] }}"
+{% endfor %}
       register: patch_results
 
     - name: Show patch results
@@ -73,12 +73,10 @@
     - name: Restart VM to apply interface changes
       block:
         - name: Stop the VM instance
-          ansible.builtin.command:
-            cmd: oc virt stop {{ name }} -n {{ namespace }} --grace-period=30
+          command: oc virt stop {{ name }} -n {{ namespace }} --grace-period=30
 
         - name: Start the VM instance
-          ansible.builtin.command:
-            cmd: oc virt start {{ name }} -n {{ namespace }}
+          command: oc virt start {{ name }} -n {{ namespace }}
       when: patch_results.changed
       register: restart_results
 
