@@ -62,44 +62,35 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Delete the current VMI to trigger reboot
+    - name: Trigger VM restart via annotation
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
+        kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        state: absent
-      when: patch_results.changed
-      register: delete_vmi_result
+        merge_type:
+          - strategic-merge
+        definition:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  kubevirt.io/restartTimestamp: "{{ '%Y-%m-%dT%H:%M:%SZ' | strftime(utcnow()) }}"
+      register: restart_annotation
 
-    - name: Wait until VMI is terminated
+    - name: Wait for VM instance to restart and be Running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
-      register: vmi_info_stop
-      until: vmi_info_stop.resources | length == 0
-      retries: 10
-      delay: 6
-
-    - name: Wait for new VMI to be created and running
-      kubernetes.core.k8s_info:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
-        namespace: "{{ namespace }}"
-        name: "{{ name }}"
-      register: vmi_info_start
-      until: vmi_info_start.resources | length > 0 and vmi_info_start.resources[0].status.phase == 'Running'
+      register: vmi_restart_info
+      until: vmi_restart_info.resources | length > 0 and vmi_restart_info.resources[0].status.phase == 'Running'
       retries: 20
       delay: 6
 
-    - name: Confirm VM restart status
+    - name: Confirm VM restart via annotation
       ansible.builtin.debug:
         msg:
-          - "Delete VMI result: {{ delete_vmi_result }}"
-          - "VM Status after reboot: {{ vmi_info_start.resources[0].status.phase }}"
-      ansible.builtin.debug:
-        msg:
-          - "Delete VMI result: {{ delete_vmi_result }}"
-          - "VM Status after reboot: {{ vmi_info_start.resources[0].status.phase }}"
+          - "Restart annotation result: {{ restart_annotation }}"
+          - "VM Status after restart: {{ vmi_restart_info.resources[0].status.phase }}"
