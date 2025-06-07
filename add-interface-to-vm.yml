@@ -45,7 +45,6 @@
         name: "{{ name }}"
         namespace: "{{ namespace }}"
         apply: yes
-        force: yes
         definition:
           spec:
             template:
