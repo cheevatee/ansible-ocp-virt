@@ -15,7 +15,7 @@
             msg: "Create VM completed"
         - name: Exit play when no attachments
           meta: end_play
-      when: attach_list == ''
+      when: net_attach_def == ''
       
     - name: Print original net_attach_def
       ansible.builtin.debug:
