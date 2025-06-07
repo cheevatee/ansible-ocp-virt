@@ -1,0 +1,93 @@
+---
+- name: Add network interface(s) to a KubeVirt VM and migrate after completion
+  hosts: all
+  gather_facts: false
+  vars:
+    # VM identification
+    name: my-vm
+    namespace: default
+
+    # Could be empty string, single def, or Python-list string
+    net_attach_def: "[]"
+#    net_attach_def: "['default/br-vmdata', 'default/br-vmdata-test', 'default/br-vmdata-dev', 'default/br-vmdata-prod']"
+
+  tasks:
+    - name: Normalize net_attach_defs into comma-separated string
+      ansible.builtin.set_fact:
+        net_attach_defs: >-
+          {% if net_attach_def == '' %}
+          ''
+          {% elif net_attach_def.startswith('[') %}
+          {{ (net_attach_def | from_yaml) | join(',') }}
+          {% else %}
+          {{ net_attach_def }}
+          {% endif %}
+
+    - name: End play if no network attachments defined
+      meta: end_play
+      when: net_attach_defs == ''
+
+    - name: Prepare list of definitions and interface names
+      ansible.builtin.set_fact:
+        attach_list: "{{ net_attach_defs.split(',') }}"
+        interface_names: >-
+          {{ attach_list
+             | map('split','/')
+             | map('last')
+             | list }}
+      when: net_attach_defs != ''
+
+    - name: Add each network interface
+      ansible.builtin.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+        merge_type:
+          - strategic-merge
+        definition:
+          spec:
+            template:
+              spec:
+                domain:
+                  devices:
+                    interfaces:
+                      - name: "{{ interface_name }}"
+                        bridge: {}
+                        model: virtio
+                networks:
+                  - name: "{{ interface_name }}"
+                    multus:
+                      networkName: "{{ net_attach }}"
+      loop: "{{ attach_list | zip(interface_names) | list }}"
+      loop_control:
+        label: "{{ item.1 }}"
+      vars:
+        net_attach: "{{ item.0 }}"
+        interface_name: "{{ item.1 }}"
+      when: net_attach_defs != ''
+      register: patch_results
+
+    - name: Show patch results
+      ansible.builtin.debug:
+        var: patch_results
+      when: patch_results is defined
+
+    - name: Migrate VM after interfaces added
+      ansible.builtin.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstanceMigration
+        state: present
+        namespace: "{{ namespace }}"
+        definition:
+          metadata:
+            name: "{{ name }}-migration"
+          spec:
+            vmiName: "{{ name }}"
+      when: patch_results is defined
+      register: migration_result
+
+    - name: Show migration result
+      ansible.builtin.debug:
+        var: migration_result
+      when: migration_result is defined
