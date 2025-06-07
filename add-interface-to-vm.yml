@@ -3,11 +3,17 @@
   hosts: localhost
   gather_facts: false
   vars:
-    name: test01            # VM name
-    namespace: vms          # VM namespace
-    net_attach_def: "[]"  # Could be "", a single def, or a Python-list string
+    name: test01  # VM name
+    namespace: vms  # VM namespace
+
+    # Could be "", a single def, a Python-list string, or comma-separated
+    net_attach_def: "default/br-vmdata,default/br-vmdata-test,default/br-vmdata-dev,default/br-vmdata-prod"
 
   tasks:
+    - name: Print net_attach_def
+      ansible.builtin.debug:
+        var: net_attach_def
+
     - block:
         - name: No attachments defined, create VM only
           ansible.builtin.debug:
@@ -20,16 +26,20 @@
       ansible.builtin.set_fact:
         attach_list: >-
           {% set val = net_attach_def | trim %}
-          {% if val.startswith('[') and val.endswith(']') %}
+          {% if val == '' or val == '[]' %}
+          []
+          {% elif val.startswith('[') and val.endswith(']') %}
           {{ val | from_yaml }}
+          {% elif "," in val %}
+          {{ val.split(',') }}
           {% else %}
           ["{{ val }}"]
           {% endif %}
 
-    - name: Print net_attach_def
+    - name: Print attach_list
       ansible.builtin.debug:
-        var: net_attach_def
-        
+        var: attach_list
+
     - name: Derive interface names
       ansible.builtin.set_fact:
         interface_names: "{{ attach_list | map('split','/') | map('last') | list }}"
