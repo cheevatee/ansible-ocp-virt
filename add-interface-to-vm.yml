@@ -62,27 +62,38 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Reboot VM to apply changes
-      ansible.builtin.command:
-        cmd: oc virt restart {{ name }} -n {{ namespace }}
+    - name: Delete running VMI to trigger VM restart
+      kubernetes.core.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+        state: absent
       when: patch_results.changed
-      register: reboot_result
+      register: restart_delete
 
-    - name: Show reboot result
-      ansible.builtin.debug:
-        var: reboot_result
+    - name: Wait for old VMI to be removed
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ namespace }}"
+        name: "{{ name }}"
+      register: delete_info
+      until: delete_info.resources | length == 0
+      retries: 10
+      delay: 3
 
-    - name: Wait for VM instance to be Running
+    - name: Wait for new VMI to appear and be Running
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
       register: vmi_info
-      until: vmi_info.resources[0].status.phase == 'Running'
+      until: vmi_info.resources and vmi_info.resources[0].status.phase == 'Running'
       retries: 20
       delay: 6
 
-    - name: Confirm VM is up and running
+    - name: Confirm VM is up and running after restart
       ansible.builtin.debug:
         msg: "VM '{{ name }}' status: {{ vmi_info.resources[0].status.phase }}"
