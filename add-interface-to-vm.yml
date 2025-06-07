@@ -89,5 +89,4 @@
           - "New VMI status: {{ vmi_info_start.resources[0].status.phase }}"
       ansible.builtin.debug:
         msg:
-          - "Restart via runStrategy result: {{ restart_result }}"
           - "VM Status after restart: {{ vmi_restart_info.resources[0].status.phase }}"
