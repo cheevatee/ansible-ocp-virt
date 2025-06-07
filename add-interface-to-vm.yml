@@ -3,24 +3,21 @@
   hosts: localhost
   gather_facts: false
   vars:
-    # VM identification
-    name: test01
-    namespace: vms
-
-    # Could be empty string, single def, or Python-list string
-    net_attach_def: "[]"
-#    net_attach_def: "['default/br-vmdata', 'default/br-vmdata-test', 'default/br-vmdata-dev', 'default/br-vmdata-prod']"
+    name: test01            # VM name
+    namespace: vms          # VM namespace
+    net_attach_def: "[]"      # Could be "", a single def, or a Python-list string
 
   tasks:
     - name: Parse network attachments into a list
       ansible.builtin.set_fact:
         attach_list: >-
-          {% if net_attach_def.startswith('[') %}
-          {{ net_attach_def | from_yaml }}
-          {% elif net_attach_def == '' %}
+          {% set val = net_attach_def | trim %}
+          {% if val == '' or val == '[]' %}
           []
+          {% elif val[0] == '[' and val[-1] == ']' %}
+          {{ val | from_yaml }}
           {% else %}
-          ["{{ net_attach_def }}"]
+          ["{{ val }}"]
           {% endif %}
 
     - name: End play if no network attachments defined
@@ -32,7 +29,7 @@
         interface_names: "{{ attach_list | map('split','/') | map('last') | list }}"
 
     - name: Add network interfaces
-      ansible.builtin.k8s:
+      kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
         name: "{{ name }}"
@@ -63,7 +60,7 @@
         var: patch_results
 
     - name: Migrate VM after interfaces added
-      ansible.builtin.k8s:
+      kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstanceMigration
         state: present
@@ -73,9 +70,10 @@
             name: "{{ name }}-migration"
           spec:
             vmiName: "{{ name }}"
-      when: patch_results is defined
+      when: patch_results.changed
       register: migration_result
 
     - name: Show migration result
       ansible.builtin.debug:
         var: migration_result
+      when: migration_result is defined
