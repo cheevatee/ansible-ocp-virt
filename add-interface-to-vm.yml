@@ -37,12 +37,14 @@
 
     - name: Add network interface(s) via oc patch
       shell: |
-        oc patch virtualmachine {{ name }} -n {{ namespace }} --type=json -p='[
+        oc patch virtualmachine {{ name }} -n {{ namespace }} --kubeconfig {{ kubeconfig }} --type=json -p='[
           {"op":"add","path":"/spec/template/spec/networks/-","value":
             {"name":"{{ interface_name }}","multus":{"networkName":"{{ net_attach }}"}}},
           {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/-","value":
             {"name":"{{ interface_name }}","bridge":{},"model":"virtio"}}
         ]'
+      environment:
+        KUBECONFIG: "{{ kubeconfig }}"
       loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
         loop_var: pair
