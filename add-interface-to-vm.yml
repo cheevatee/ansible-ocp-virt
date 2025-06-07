@@ -32,20 +32,19 @@
       ansible.builtin.set_fact:
         interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
 
-    - name: Show attachments planning
+    - name: Print attach_list_list and interface_names
       ansible.builtin.debug:
         msg:
-          - "Will attach: {{ attach_list_list }}"
-          - "Interface names: {{ interface_names }}"
+          - "attach_list_list={{ attach_list_list }}"
+          - "interface_names={{ interface_names }}"
 
-    - name: Patch VirtualMachine spec with new interfaces
+    - name: Add network interfaces
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
         apply: yes
-        force: yes
         definition:
           spec:
             template:
@@ -53,36 +52,39 @@
                 domain:
                   devices:
                     interfaces:
-                      {% for idx in range(attach_list_list | length) %}
-                      - name: "{{ interface_names[idx] }}"
+                      - name: "{{ item.1 }}"
                         bridge: {}
                         model: virtio
-                      {% endfor %}
                 networks:
-                      {% for idx in range(attach_list_list | length) %}
-                      - name: "{{ interface_names[idx] }}"
-                        multus:
-                          networkName: "{{ attach_list_list[idx] }}"
-                      {% endfor %}
+                  - name: "{{ item.1 }}"
+                    multus:
+                      networkName: "{{ item.0 }}"
+      loop: "{{ attach_list_list | zip(interface_names) | list }}"
+      loop_control:
+        label: "{{ item.1 }}"
       register: patch_results
 
     - name: Show patch results
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Restart VM to apply interface changes
-      block:
-        - name: Stop the VM instance
-          ansible.builtin.command:
-            cmd: oc virt stop {{ name }} -n {{ namespace }} --grace-period=30
-
-        - name: Start the VM instance
-          ansible.builtin.command:
-            cmd: oc virt start {{ name }} -n {{ namespace }}
+    - name: Migrate VM after interfaces added
+      kubernetes.core.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstanceMigration
+        state: present
+        namespace: "{{ namespace }}"
+        apply: yes
+        force: yes
+        definition:
+          metadata:
+            name: "{{ name }}-migration"
+          spec:
+            vmiName: "{{ name }}"
       when: patch_results.changed
-      register: restart_results
+      register: migration_result
 
-    - name: Show restart results
+    - name: Show migration result
       ansible.builtin.debug:
-        var: restart_results
-      when: restart_results is defined
+        var: migration_result
+      when: migration_result is defined
