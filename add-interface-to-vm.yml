@@ -47,7 +47,8 @@
             {'op':'add','path':'/spec/template/spec/domain/devices/interfaces/-','value':{'name':interface_name,'bridge':{},'model':'virtio'}}
           ] | to_json }}"
         status_code: 200
-        validate_certs: "{{ lookup('env','K8S_AUTH_VERIFY_SSL') | default('false') | bool }}"
+        validate_certs: false
+ #       validate_certs: "{{ lookup('env','K8S_AUTH_VERIFY_SSL') | default('true') | bool }}"
       loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
         loop_var: pair
