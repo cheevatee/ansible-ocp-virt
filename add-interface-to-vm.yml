@@ -35,32 +35,31 @@
           - "attachments: {{ attach_list_list }}"
           - "interfaces: {{ interface_names }}"
           
-    - name: Add network interface(s) via server-side apply
-      kubernetes.core.k8s:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        server_side_apply: yes
-        force: yes
-        definition:
-          spec:
-            template:
-              spec:
-                domain:
-                  devices:
-                    interfaces:
-                      - name: "{{ item.1 }}"
-                        bridge: {}
-                        model: virtio
-                networks:
-                  - name: "{{ item.1 }}"
-                    multus:
-                      networkName: "{{ item.0 }}"
+    - name: Add network interface(s) via oc command
+      ansible.builtin.command:
+        argv:
+          - oc
+          - patch
+          - virtualmachine
+          - "{{ name }}"
+          - -n
+          - "{{ namespace }}"
+          - --type=json
+          - -p
+          - |
+            [
+              {"op":"add","path":"/spec/template/spec/networks/-","value":
+                {"name":"{{ interface_name }}","multus":{"networkName":"{{ net_attach }}"}}},
+              {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/-","value":
+                {"name":"{{ interface_name }}","bridge":{},"model":"virtio"}}
+            ]
       loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
         loop_var: item
         label: "{{ item.1 }}"
+      vars:
+        net_attach: "{{ item.0 }}"
+        interface_name: "{{ item.1 }}"
       register: patch_results
 
     - name: Show patch results
@@ -87,4 +86,3 @@
       ansible.builtin.debug:
         var: migration_result
       when: migration_result is defined
-
