@@ -3,20 +3,19 @@
   hosts: localhost
   gather_facts: false
   vars:
-    # VM identification
     name: test01            # VM name
     namespace: vms          # VM namespace
-    net_attach_def: "[]"      # Could be "", a list, or a comma-separated string
+    net_attach_def: "[]"  # Could be "", a single def, or a Python-list string
 
   tasks:
-      - block:
+    - block:
         - name: No attachments defined, create VM only
           ansible.builtin.debug:
             msg: "Create VM completed"
         - name: Exit play when no attachments
           meta: end_play
-      when: net_attach_def == ''
-      
+      when: net_attach_def == '' or net_attach_def == '[]'
+
     - name: Print original net_attach_def
       ansible.builtin.debug:
         var: net_attach_def
