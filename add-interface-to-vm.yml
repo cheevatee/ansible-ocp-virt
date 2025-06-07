@@ -36,30 +36,25 @@
           - "interfaces: {{ interface_names }}"
           
     - name: Add network interface(s) via oc command
-      ansible.builtin.command:
-        argv:
-          - oc
-          - patch
-          - virtualmachine
-          - "{{ name }}"
-          - -n
-          - "{{ namespace }}"
-          - --type=json
-          - -p
-          - |
-            [
-              {"op":"add","path":"/spec/template/spec/networks/-","value":
-                {"name":"{{ interface_name }}","multus":{"networkName":"{{ net_attach }}"}}},
-              {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/-","value":
-                {"name":"{{ interface_name }}","bridge":{},"model":"virtio"}}
-            ]
+      uri:
+        url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
+        method: PATCH
+        headers:
+          Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
+          Content-Type: application/json-patch+json
+        body: "{{ [
+            {'op':'add','path':'/spec/template/spec/networks/-','value':{'name':interface_name,'multus':{'networkName':net_attach}}},
+            {'op':'add','path':'/spec/template/spec/domain/devices/interfaces/-','value':{'name':interface_name,'bridge':{},'model':'virtio'}}
+          ] | to_json }}"
+        status_code: 200
+        validate_certs: "{{ lookup('env','K8S_AUTH_VERIFY_SSL') | default('true') | bool }}"
       loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
-        loop_var: item
-        label: "{{ item.1 }}"
+        loop_var: pair
+        label: "{{ pair[1] }}"
       vars:
-        net_attach: "{{ item.0 }}"
-        interface_name: "{{ item.1 }}"
+        net_attach: "{{ pair[0] }}"
+        interface_name: "{{ pair[1] }}"
       register: patch_results
 
     - name: Show patch results
