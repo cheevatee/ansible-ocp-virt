@@ -22,12 +22,7 @@
 
     - name: Normalize attach_list to comma-separated string
       ansible.builtin.set_fact:
-        attach_list_str: >-
-          {% if net_attach_def is sequence %}
-          {{ net_attach_def | join(',') }}
-          {% else %}
-          {{ (net_attach_def|string) | regex_replace('[\[\] ]', '') }}
-          {% endif %}
+        attach_list_str: "{{ (net_attach_def is sequence) | ternary(net_attach_def | join(','), (net_attach_def|string) | regex_replace('^[\[\]\s]+|[\[\]\s]+$', '')) }}"
 
     - name: Print normalized attach_list_str
       ansible.builtin.debug:
