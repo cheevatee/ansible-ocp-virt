@@ -62,57 +62,42 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Restart VM by toggling runStrategy
-      block:
-        - name: Set runStrategy to Manual to stop VM
-          kubernetes.core.k8s:
-            api_version: kubevirt.io/v1
-            kind: VirtualMachine
-            name: "{{ name }}"
-            namespace: "{{ namespace }}"
-            merge_type:
-              - strategic-merge
-            definition:
-              spec:
-                runStrategy: Manual
+    - name: Delete the running VMI to restart VM
+      kubernetes.core.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+        state: absent
+      register: delete_vmi
 
-        - name: Wait for VMI to terminate
-          kubernetes.core.k8s_info:
-            api_version: kubevirt.io/v1
-            kind: VirtualMachineInstance
-            namespace: "{{ namespace }}"
-            name: "{{ name }}"
-          register: vmi_terminated
-          until: vmi_terminated.resources | length == 0
-          retries: 10
-          delay: 6
-
-        - name: Set runStrategy back to Always to start VM
-          kubernetes.core.k8s:
-            api_version: kubevirt.io/v1
-            kind: VirtualMachine
-            name: "{{ name }}"
-            namespace: "{{ namespace }}"
-            merge_type:
-              - strategic-merge
-            definition:
-              spec:
-                runStrategy: Always
-          register: restart_result
-      when: true
-
-    - name: Wait for VM to be Running
+    - name: Wait for VMI to be terminated
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
         namespace: "{{ namespace }}"
         name: "{{ name }}"
-      register: vmi_restart_info
-      until: vmi_restart_info.resources | length > 0 and vmi_restart_info.resources[0].status.phase == 'Running'
+      register: vmi_info_stop
+      until: vmi_info_stop.resources | length == 0
+      retries: 10
+      delay: 6
+
+    - name: Wait for new VMI to start and be Running
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ namespace }}"
+        name: "{{ name }}"
+      register: vmi_info_start
+      until: vmi_info_start.resources | length > 0 and vmi_info_start.resources[0].status.phase == 'Running'
       retries: 20
       delay: 6
 
-    - name: Confirm VM restart status
+    - name: Confirm VM restart via VMI deletion
+      ansible.builtin.debug:
+        msg:
+          - "Delete VMI result: {{ delete_vmi }}"
+          - "New VMI status: {{ vmi_info_start.resources[0].status.phase }}"
       ansible.builtin.debug:
         msg:
           - "Restart via runStrategy result: {{ restart_result }}"
