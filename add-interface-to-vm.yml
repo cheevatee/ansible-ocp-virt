@@ -62,23 +62,27 @@
       ansible.builtin.debug:
         var: patch_results
 
-    - name: Trigger live migration to apply changes
-      kubernetes.core.k8s:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachineInstanceMigration
-        state: present
-        namespace: "{{ namespace }}"
-        apply: yes
-        force: yes
-        definition:
-          metadata:
-            name: "{{ name }}-migration"
-          spec:
-            vmiName: "{{ name }}"
+    - name: Reboot VM to apply changes
+      ansible.builtin.command:
+        cmd: oc virt restart {{ name }} -n {{ namespace }}
       when: patch_results.changed
-      register: migration_result
+      register: reboot_result
 
-    - name: Show migration result
+    - name: Show reboot result
       ansible.builtin.debug:
-        var: migration_result
-      when: migration_result is defined
+        var: reboot_result
+
+    - name: Wait for VM instance to be Running
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        namespace: "{{ namespace }}"
+        name: "{{ name }}"
+      register: vmi_info
+      until: vmi_info.resources[0].status.phase == 'Running'
+      retries: 20
+      delay: 6
+
+    - name: Confirm VM is up and running
+      ansible.builtin.debug:
+        msg: "VM '{{ name }}' status: {{ vmi_info.resources[0].status.phase }}"
