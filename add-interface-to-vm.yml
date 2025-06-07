@@ -3,16 +3,23 @@
   hosts: localhost
   gather_facts: false
   vars:
-    name: test01  # VM name
-    namespace: vms  # VM namespace
-
-    # Could be "", a single def, a Python-list string, or comma-separated
-    net_attach_def: "default/br-vmdata,default/br-vmdata-test,default/br-vmdata-dev,default/br-vmdata-prod"
+    # VM identification
+    name: test01            # VM name
+    namespace: vms          # VM namespace
+    net_attach_def: "[]"      # Could be "", a list, or a comma-separated string
 
   tasks:
-    - name: Print net_attach_def
+    - name: Print original net_attach_def
       ansible.builtin.debug:
         var: net_attach_def
+
+    - name: Normalize attach_list to comma-separated string
+      ansible.builtin.set_fact:
+        attach_list: "{{ (net_attach_def|string) | regex_replace('[\[\]' ]', '') }}"
+
+    - name: Print normalized attach_list
+      ansible.builtin.debug:
+        var: attach_list
 
     - block:
         - name: No attachments defined, create VM only
@@ -20,33 +27,15 @@
             msg: "Create VM completed"
         - name: Exit play when no attachments
           meta: end_play
-      when: net_attach_def == '' or net_attach_def == '[]'
+      when: attach_list == ''
 
-    - name: Parse network attachments into a list
+    - name: Turn attach_list string into list
       ansible.builtin.set_fact:
-        attach_list: >-
-          {% set val = net_attach_def | trim %}
-          {% if val == '' or val == '[]' %}
-          []
-          {% elif val.startswith('[') and val.endswith(']') %}
-          {{ val | from_yaml }}
-          {% elif "," in val %}
-          {{ val.split(',') }}
-          {% else %}
-          ["{{ val }}"]
-          {% endif %}
-
-    - name: Print attach_list
-      ansible.builtin.debug:
-        var: attach_list
+        attach_list_list: "{{ attach_list.split(',') }}"
 
     - name: Derive interface names
       ansible.builtin.set_fact:
-        interface_names: "{{ attach_list | map('split','/') | map('last') | list }}"
-
-    - name: Print interface_names
-      ansible.builtin.debug:
-        var: interface_names
+        interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
 
     - name: Add network interfaces
       kubernetes.core.k8s:
@@ -70,7 +59,7 @@
                   - name: "{{ item.1 }}"
                     multus:
                       networkName: "{{ item.0 }}"
-      loop: "{{ attach_list | zip(interface_names) | list }}"
+      loop: "{{ attach_list_list | zip(interface_names) | list }}"
       loop_control:
         label: "{{ item.1 }}"
       register: patch_results
