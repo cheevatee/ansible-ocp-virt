@@ -11,7 +11,7 @@
     - block:
         - name: No attachments defined, create VM only
           ansible.builtin.debug:
-            msg: "Create VM completed"
+            msg: "The interface has been successfully added to the VM."
         - name: Exit play when no attachments
           meta: end_play
       when: net_attach_def == '' or net_attach_def == '[]'
@@ -89,4 +89,4 @@
         msg:
           - "Delete VMI result: {{ delete_vmi }}"
       ansible.builtin.debug:
-        msg: "Create VM completed"
+        msg: "The interface has been successfully added to the VM."
