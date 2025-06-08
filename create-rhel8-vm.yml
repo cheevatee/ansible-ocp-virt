@@ -25,6 +25,11 @@
                           | replace(\"'\", '')
                           | replace(', ', ',') }}"
 
+    - name: Print net_attach_def
+      ansible.builtin.debug:
+        msg:
+          - "net_attach_def: {{ net_attach_def }}"
+
     - block:
         - name: Normalize attach_list_str
           ansible.builtin.set_fact:
