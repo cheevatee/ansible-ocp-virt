@@ -68,8 +68,8 @@ spec:
             masquerade: {}
 
           {# dynamic extra interfaces #}
-          {% if net_attach_defs | length > 0 and interfaces | length > 0 and (net_attach_defs | length == interfaces | length) %}
-          {% for i in range(net_attach_defs | length) %}
+          {% if net_attach_def | default([]) | length > 0 and interfaces | default([]) | length > 0 and (net_attach_def | length == interfaces | length) %}
+          {% for i in range(net_attach_def | length) %}
           - name: {{ interfaces[i] }}
             model: virtio
             bridge: {}
@@ -82,11 +82,11 @@ spec:
         pod: {}
 
       {# dynamic Multus network attachments #}
-      {% if net_attach_defs | length > 0 and interfaces | length > 0 and (net_attach_defs | length == interfaces | length) %}
-      {% for i in range(net_attach_defs | length) %}
+      {% if net_attach_def | default([]) | length > 0 and interfaces | default([]) | length > 0 and (net_attach_def | length == interfaces | length) %}
+      {% for i in range(net_attach_def | length) %}
       - name: {{ interfaces[i] }}
         multus:
-          networkName: {{ net_attach_defs[i] }}
+          networkName: {{ net_attach_def[i] }}
       {% endfor %}
       {% endif %}
 
