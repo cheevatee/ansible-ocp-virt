@@ -120,3 +120,7 @@
       retries: 60
       delay: 10
       until: (deploy_collection_vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
+
+    - name: Confirm VM is Running
+      ansible.builtin.debug:
+        msg: "Create VM {{ name }} completed"
