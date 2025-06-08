@@ -50,7 +50,7 @@
               - "net_attach_def: {{ net_attach_def }}"
               - "attachments: {{ attach_list_list }}"
               - "interfaces: {{ interface_names }}"
-      when: net_attach_def != '' or net_attach_def != "['']"
+      when: net_attach_def != '' or net_attach_def != '[]'
 
     - name: Print net_attach_def 2
       ansible.builtin.debug:
