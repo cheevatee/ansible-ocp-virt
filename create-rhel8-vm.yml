@@ -24,6 +24,30 @@
                           | replace(']', '')
                           | replace(\"'\", '')
                           | replace(', ', ',') }}"
+
+    - block:
+        - name: Normalize attach_list_str
+          ansible.builtin.set_fact:
+            attach_list_str: attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
+
+        - name: Turn attach_list_str into list
+          ansible.builtin.set_fact:
+            attach_list_list: "{{ attach_list_str == '' and [] or attach_list_str.split(',') }}"
+
+        - name: Derive interface names
+          ansible.builtin.set_fact:
+            interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
+
+        - name: Print planned attachments
+          ansible.builtin.debug:
+            msg:
+              - "net_attach_def: {{ net_attach_def }}"
+              - "attachments:   {{ attach_list_list }}"
+              - "interfaces:    {{ interface_names }}"
+      when:
+        - net_attach_def is defined
+        - net_attach_def != ''
+        - net_attach_def != '[]'
                           
 #    - name: Create host in Satellite
 #      theforeman.foreman.host:
