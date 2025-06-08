@@ -66,8 +66,6 @@ spec:
           - name: default
             model: virtio
             masquerade: {}
-
-          {# dynamic extra interfaces #}
           {% for i in range(net_attach_def | length) %}
           - name: {{ interface_names[i] }}
             model: virtio
@@ -78,8 +76,6 @@ spec:
       # default pod network
       - name: default
         pod: {}
-
-      {# dynamic Multus network attachments #}
       {% for i in range(net_attach_def | length) %}
       - name: {{ interface_names[i] }}
         multus:
