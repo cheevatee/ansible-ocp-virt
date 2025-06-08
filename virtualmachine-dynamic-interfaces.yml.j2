@@ -1,0 +1,104 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  annotations:
+    vm.kubevirt.io/validations: |
+      [
+        {
+          "name": "minimal-required-memory",
+          "path": "jsonpath::.spec.domain.memory.guest",
+          "rule": "integer",
+          "message": "This VM requires more memory.",
+          "min": 1610612736
+        }
+      ]
+  labels:
+    app: {{ name }}
+    vm.kubevirt.io/template: rhel8-server-small
+    vm.kubevirt.io/template.revision: "1"
+    vm.kubevirt.io/template.version: v0.32.2
+  name: {{ name }}
+  namespace: {{ namespace }}
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: {{ name }}
+    spec:
+      source:
+        http:
+          url: {{ url }}
+      storage:
+        resources:
+          requests:
+            storage: {{ boot_image_size }}
+  running: true
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: {{ name }}
+        vm.kubevirt.io/workload: server
+      labels:
+        kubevirt.io/domain: {{ name }}
+        kubevirt.io/size: small
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: {{ vm_cpus_cores }}
+          sockets: {{ vm_cpus_sockets }}
+          threads: {{ vm_cpus_threads }}
+        memory:
+          guest: {{ vm_memory_requests }}
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+
+          interfaces:
+          # default pod network interface
+          - name: default
+            model: virtio
+            masquerade: {}
+
+          {# dynamic extra interfaces #}
+          {% if net_attach_defs | default([]) | length > 0 and interfaces | default([]) | length > 0 and (net_attach_defs | length == interfaces | length) %}
+          {% for i in range(net_attach_defs | length) %}
+          - name: {{ interfaces[i] }}
+            model: virtio
+            bridge: {}
+          {% endfor %}
+          {% endif %}
+
+      networks:
+      # default pod network
+      - name: default
+        pod: {}
+
+      {# dynamic Multus network attachments #}
+      {% if net_attach_defs | default([]) | length > 0 and interfaces | default([]) | length > 0 and (net_attach_defs | length == interfaces | length) %}
+      {% for i in range(net_attach_defs | length) %}
+      - name: {{ interfaces[i] }}
+        multus:
+          networkName: {{ net_attach_defs[i] }}
+      {% endfor %}
+      {% endif %}
+
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: {{ name }}
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          secretRef:
+            name: cloud-init-{{ name }}
+
+      rng: {}
+      evictionStrategy: LiveMigrate
+      terminationGracePeriodSeconds: 180
