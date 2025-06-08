@@ -53,7 +53,8 @@
     - name: Create VirtualMachine
       kubernetes.core.k8s:
         state: present
-        template: virtualmachine.yml.j2
+        template: virtualmachine-dynamic-interfaces.yml.j2
+#        template: virtualmachine.yml.j2
 
     - name: Wait for VM to be ready
       kubernetes.core.k8s_info:
