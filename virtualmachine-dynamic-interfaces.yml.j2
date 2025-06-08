@@ -69,7 +69,7 @@ spec:
 
           {# dynamic extra interfaces #}
           {% for i in range(net_attach_def | length) %}
-          - name: {{ interfaces[i] }}
+          - name: {{ interface_names[i] }}
             model: virtio
             bridge: {}
           {% endfor %}
@@ -81,7 +81,7 @@ spec:
 
       {# dynamic Multus network attachments #}
       {% for i in range(net_attach_def | length) %}
-      - name: {{ interfaces[i] }}
+      - name: {{ interface_names[i] }}
         multus:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
