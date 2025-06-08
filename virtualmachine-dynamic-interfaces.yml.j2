@@ -67,7 +67,7 @@ spec:
             model: virtio
             masquerade: {}
           {% for i in range(net_attach_def | length) %}
-          - name: {{ interface_names[i] }}
+- name: {{ interface_names[i] }}
             model: virtio
             bridge: {}
           {% endfor %}
@@ -77,7 +77,7 @@ spec:
       - name: default
         pod: {}
       {% for i in range(net_attach_def | length) %}
-      - name: {{ interface_names[i] }}
+- name: {{ interface_names[i] }}
         multus:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
