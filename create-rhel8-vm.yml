@@ -28,7 +28,7 @@
     - block:
         - name: Normalize attach_list_str
           ansible.builtin.set_fact:
-            attach_list_str: attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
+            attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
 
         - name: Turn attach_list_str into list
           ansible.builtin.set_fact:
