@@ -29,7 +29,7 @@
       ansible.builtin.debug:
         msg:
           - "net_attach_def: {{ net_attach_def }}"
-          - "interfaces:    {{ interface_names }}"
+          - "interfaces: {{ interface_names }}"
 
     - block:
         - name: Normalize attach_list_str
@@ -48,15 +48,15 @@
           ansible.builtin.debug:
             msg:
               - "net_attach_def: {{ net_attach_def }}"
-              - "attachments:   {{ attach_list_list }}"
-              - "interfaces:    {{ interface_names }}"
+              - "attachments: {{ attach_list_list }}"
+              - "interfaces: {{ interface_names }}"
       when: net_attach_def != '' or net_attach_def != '[]'
 
     - name: Print net_attach_def 2
       ansible.builtin.debug:
         msg:
           - "net_attach_def: {{ net_attach_def }}"
-          - "interfaces:    {{ interface_names }}"
+          - "interfaces: {{ interface_names }}"
                           
 #    - name: Create host in Satellite
 #      theforeman.foreman.host:
