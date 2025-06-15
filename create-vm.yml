@@ -71,6 +71,7 @@
 #        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
 #        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
 #        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
+#        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
 #        name: "{{ name }}.{{ fqdn }}"
 #        organization: "{{ host_organization }}"
 #        location: "{{ host_location }}"
