@@ -126,7 +126,7 @@
         --insecure-skip-tls-verify
       register: login_result
 
-    - name: Debug: show login result
+    - name: Debug show login result
       debug:
         msg: "{{ login_result.stdout }}"
 
@@ -139,7 +139,7 @@
                | .key'
       register: pxe_interface_id
 
-    - name: Debug: show interface index
+    - name: Debug show interface index
       debug:
         msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
 
