@@ -127,9 +127,10 @@
       register: login_result
 
     - name: Get index of the {{ pxe_interface_name }} interface
-      shell: >-
-        oc get vm {{ name }}} -n {{ namespace }} -o json |
-        jq -r --arg name "{{ pxe_interface_name }}" '.spec.template.spec.domain.devices.interfaces|to_entries[]|select(.value.name==$name)|.key'
+      shell: >
+        oc get vm "{{ name }}" -n "{{ namespace }}" -o json | \
+        jq -r --arg iface "{{ pxe_interface_name }}" \
+          '.spec.template.spec.domain.devices.interfaces | to_entries[] | select(.value.name==$iface) | .key'
       register: pxe_interface_id
       changed_when: false
 
@@ -138,11 +139,11 @@
         msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
 
     - name: Patch VM to add bootOrder=2 to {{ pxe_interface_name }}
-      shell: |
-        oc patch virtualmachine {{ name }}} \
-          -n {{ namespace }} \
+      shell: >
+        oc patch virtualmachine "{{ name }}" \
+          -n "{{ namespace }}" \
           --type=json \
-          -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id.stdout }}/bootOrder","value":2}]' \
+          -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/'"{{ pxe_interface_id.stdout }}"'/bootOrder","value":2}]' \
           --insecure-skip-tls-verify
       register: patch_result
 
