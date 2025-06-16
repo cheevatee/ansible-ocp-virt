@@ -25,7 +25,7 @@ content_source: "satellite01.apac.gps"
 content_view: "ccv_rhel9"
 arch: "x86_64"
 os_name: "RHEL 9.6"
-nic_type: "Nic::Managed"
+nic_type: "interface"
 nic_primary: false
 nic_managed: true
 nic_provision: true
