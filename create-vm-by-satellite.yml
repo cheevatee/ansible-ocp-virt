@@ -119,37 +119,34 @@
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
 
-    - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
-      shell: >-
-        oc login {{ lookup('env','K8S_AUTH_HOST') }} \
-        --token={{ lookup('env','K8S_AUTH_API_KEY') }} \
-        --insecure-skip-tls-verify
+    - name: Login to OpenShift (skip TLS verify)
+      shell: |
+        oc login {{ k8s_host }} --token={{ k8s_token }} --insecure-skip-tls-verify
       register: login_result
-
-    - name: Debug show login result
-      debug:
-        msg: "{{ login_result.stdout }}"
+      changed_when: false
 
     - name: Get index of the {{ pxe_interface_name }} interface
-      shell: >-
-        oc get vm {{ name }}} -n {{ namespace }} -o json | \
-        jq -r '.spec.template.spec.domain.devices.interfaces \
-               | to_entries[] \
-               | select(.value.name=="'""{{ pxe_interface_name }}"'"') \
-               | .key'
+      shell: |
+        oc get vm {{ name }}} -n {{ namespace }} -o json |
+        jq -r --arg name "{{ pxe_interface_name }}" \
+          '.spec.template.spec.domain.devices.interfaces \
+           | to_entries[] \
+           | select(.value.name==$name) \
+           | .key'
       register: pxe_interface_id
+      changed_when: false
 
-    - name: Debug show interface index
+    - name: Show interface index
       debug:
         msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
 
     - name: Patch VM to add bootOrder=2 to {{ pxe_interface_name }}
-      shell: >-
+      shell: |
         oc patch virtualmachine {{ name }}} \
-        -n {{ namespace }} \
-        --type=json \
-        -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id.stdout }}/bootOrder","value":2}]' \
-        --insecure-skip-tls-verify
+          -n {{ namespace }} \
+          --type=json \
+          -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id.stdout }}/bootOrder","value":2}]' \
+          --insecure-skip-tls-verify
       register: patch_result
 
     - name: Show patch output
