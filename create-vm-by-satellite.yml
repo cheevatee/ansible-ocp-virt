@@ -133,19 +133,6 @@
       register: pxe_interface_id
       changed_when: false
 
-    - name: Debug show interface index
-      debug:
-        msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}" {{ pxe_interface_name }} interface
-      shell: |
-        oc get vm {{ name }}} -n {{ namespace }} -o json |
-        jq -r --arg name "{{ pxe_interface_name }}" \
-          '.spec.template.spec.domain.devices.interfaces \
-           | to_entries[] \
-           | select(.value.name==$name) \
-           | .key'
-      register: pxe_interface_id
-      changed_when: false
-
     - name: Show interface index
       debug:
         msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
