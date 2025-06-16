@@ -20,7 +20,7 @@ metadata:
   name: {{ name }}
   namespace: {{ namespace }}
 spec:
-  running: false               # VM will not auto-start; change to true if you want it running immediately
+  running: false               # VM will not auto-start; change to true if desired
   template:
     metadata:
       annotations:
@@ -42,9 +42,6 @@ spec:
         devices:
           disks:
           - name: rootdisk
-            disk:
-              bus: virtio
-          - name: cloudinitdisk
             disk:
               bus: virtio
           interfaces:
@@ -74,10 +71,6 @@ spec:
       - name: rootdisk
         emptyDisk:
           capacity: {{ boot_image_size }}
-      - name: cloudinitdisk
-        cloudInitNoCloud:
-          secretRef:
-            name: cloud-init-{{ name }}
 
       rng: {}
       evictionStrategy: LiveMigrate
