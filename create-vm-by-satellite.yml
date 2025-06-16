@@ -94,10 +94,10 @@
         template: virtualmachine-pxe-dynamic-interfaces.yml.j2
 #        template: virtualmachine.yml.j2
 
-    - name: Retrieve the VirtualMachineInstance
+    - name: Retrieve the VirtualMachine
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
-        kind: VirtualMachineInstance
+        kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
       register: vmi_info
