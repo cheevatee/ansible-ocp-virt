@@ -12,6 +12,7 @@ vm_cpus_threads: 1
 vm_memory_requests: '2Gi'
 net_attach_def: [] #['default/br-vmdata', 'default/br-vmdata-dev', 'default/br-vmdata-prod', 'default/br-vmdata-test']
 interface_names: [] #['br-vmdata', 'br-vmdata-dev', 'br-vmdata-prod', 'br-vmdata-test']
+pxe_interface_name: br-isolated
 cloud_init_secret: cloud-init
 username: "cloud-user"
 password: "r3dh4t1!"
