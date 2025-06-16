@@ -98,7 +98,7 @@
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachineInstance
-        name: "{{ vm_name }}"
+        name: "{{ name }}"
         namespace: "{{ namespace }}"
       register: vmi_info
 
@@ -121,7 +121,7 @@
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
-        name: "{{ vm_name }}"
+        name: "{{ name }}"
         namespace: "{{ namespace }}"
         merge_type: strategic-merge
         definition:
