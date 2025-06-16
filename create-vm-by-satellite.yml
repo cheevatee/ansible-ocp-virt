@@ -166,6 +166,7 @@
             ip:        "{{ nic_ip }}" ## 
             mac:       "{{ pxe_interface_mac }}" ##
             subnet_id: "{{ nic_subnet_id }}" ##
+            
         # Provisioning
         ptable:   "{{ partition_table }}" ##
         pxe_loader:        "{{ pxe_loader }}" ##
