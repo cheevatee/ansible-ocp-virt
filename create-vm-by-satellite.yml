@@ -98,7 +98,7 @@
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachine       # <— note: VirtualMachine, not VirtualMachineInstance
-        name: "{{ vm_name }}"
+        name: "{{ name }}"
         namespace: "{{ namespace }}"
       register: vm_spec_info
     
