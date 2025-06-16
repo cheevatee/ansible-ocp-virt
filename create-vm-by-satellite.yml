@@ -118,37 +118,6 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Apply JSON-Patch to set boot orders
-      shell: >-
-        oc patch virtualmachine {{ name }}
-          -n {{ namespace }}
-          --type=json
-          -p='[
-            {"op":"add","path":"/spec/template/spec/domain/devices/disks/0/bootOrder","value":1},
-            {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/2/bootOrder","value":2}
-          ]'
-      register: patch_result
-      environment:
-        KUBECONFIG: "{{ lookup('env','KUBECONFIG') | default('~/.kube/config') }}"
-
-    - name: Show patch output
-      debug:
-        msg: "{{ patch_result.stdout }}"
-
-    - name: Verify new boot orders
-      shell: >-
-        oc get vm {{ name }} -n {{ namespace }} \
-          -o jsonpath='{.spec.template.spec.domain.devices.disks[?(@.name=="rootdisk")].bootOrder}{"\n"}{.spec.template.spec.domain.devices.interfaces[?(@.name=="br-isolated")].bootOrder}{"\n"}'
-      register: verify
-      environment:
-        KUBECONFIG: "{{ lookup('env','KUBECONFIG') | default('~/.kube/config') }}"
-
-    - name: Display verified boot orders
-      debug:
-        msg:
-          - "rootdisk.bootOrder = {{ verify.stdout_lines[0] }}"
-          - "br-isolated.bootOrder = {{ verify.stdout_lines[1] }}"
-
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
 #        api_version: kubevirt.io/v1
