@@ -118,36 +118,42 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Patch VM so that br-isolated is bootOrder=2
-      kubernetes.core.k8s:
-        state: present
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        merge_type: merge               # <-- use JSON‐merge patch
-        definition:
-          spec:
-            template:
-              spec:
-                domain:
-                  devices:
-                    interfaces:
-                    - name: br-isolated
-                      bootOrder: 2
-      register: patch_result
-    
-    - name: Confirm patch applied
-      debug:
-        var: patch_result
-    
-    - name: Confirm patch applied
-      debug:
-        var: patch_result
+    - name: Set br-isolated bootOrder=2 via merge-patch (one-liner)
+      uri:
+        url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
+        method: PATCH
+        headers:
+          Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
+          Content-Type: application/merge-patch+json
+        body: '{"spec":{"template":{"spec":{"domain":{"devices":{"interfaces":[{"name":"br-isolated","bootOrder":2}]}}}}}}'
+        status_code: 200
+        validate_certs: false
 
-    - name: Confirm patch applied
+    - name: Confirm patch applied – fetch VM
+      uri:
+        url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
+        return_content: yes
+        status_code: 200
+        validate_certs: false
+      register: vm_after_patch
+
+    - name: Show current bootOrder of br-isolated
+      set_fact:
+        br_iso_boot: >-
+          {{
+            (
+              vm_after_patch.json.spec.template.spec.domain.devices.interfaces
+              | selectattr('name','equalto','br-isolated')
+              | list
+            )[0].bootOrder
+          }}
+
+    - name: Confirmed bootOrder
       debug:
-        var: patch_result
+        msg: "br-isolated bootOrder is now {{ br_iso_boot }}"
 
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
