@@ -104,7 +104,7 @@
     
     - name: Extract {{ pxe_interface_name }} MAC
       set_fact:
-        br_iso_mac: >-
+        pxe_interface_mac: >-
           {{
             (
               vm_spec_info.resources[0]
