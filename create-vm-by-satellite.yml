@@ -61,7 +61,7 @@
 
     - name: Load Jinja2 template into a variable
       ansible.builtin.set_fact:
-        j2_content: "{{ lookup('template', 'virtualmachine-dynamic-interfaces.yml.j2') }}"
+        j2_content: "{{ lookup('template', 'virtualmachine-pxe-dynamic-interfaces.yml.j2') }}"
 
     - name: Print rendered J2 template
       ansible.builtin.debug:
@@ -91,7 +91,7 @@
     - name: Create VirtualMachine
       kubernetes.core.k8s:
         state: present
-        template: virtualmachine-dynamic-interfaces.yml.j2
+        template: virtualmachine-pxe-dynamic-interfaces.yml.j2
 #        template: virtualmachine.yml.j2
 
 #    - name: Wait for VM to be ready
