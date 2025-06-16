@@ -138,7 +138,7 @@
             | first
           }}
 
-    - name: Patch br-isolated to add bootOrder: 2
+    - name: Patch br-isolated to add bootOrder 2
       kubernetes.core.k8s:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
