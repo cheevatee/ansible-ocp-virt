@@ -56,16 +56,19 @@ spec:
           - name: rootdisk
             disk:
               bus: virtio
+            bootOrder: 1
           interfaces:
           # default pod network interface
           - name: default
             model: virtio
             masquerade: {}
+            bootOrder: ""
 {% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
           {% for i in range(net_attach_def | length) %}
 - name: {{ interface_names[i] }}
             model: virtio
             bridge: {}
+            bootOrder: ""
           {% endfor %}
           {% endif %}
           
