@@ -16,7 +16,24 @@ pxe_interface_name: br-isolated
 cloud_init_secret: cloud-init
 username: "cloud-user"
 password: "r3dh4t1!"
-host_organization: "Default Organization"
-host_location: "Default Location"
-host_hostgroup: "Default Host Group"
+############################################################
+host_organization: "RH01" #"Default Organization"
+host_location: "DC01" #"Default Location"
+host_hostgroup: "Lab Example" #"Default Host Group"
+lifecycle_env: Dev
+content_source: satellite01.apac.gps
+content_view: ccv_rhel9
+arch: x86_64
+os_name: "RHEL 9.6"
+nic_type: "Nic::Managed"
+nic_primary: false
+nic_managed: true
+nic_provision: true
+nic_execution: true
+nic_virtual: false
+nic_ip: "168.192.10.22"
+pxe_interface_mac: "02:11:bf:00:00:13"
+nic_subnet_id: 1
+partition_table: "Kickstart default"
+pxe_loader: "PXELinux BIOS"
 host_activationkey: "RHEL8_Dev,RHEL7_Dev"
