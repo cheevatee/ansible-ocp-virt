@@ -118,17 +118,17 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Set br-isolated bootOrder=2 via merge-patch (one-liner)
+    - name: Patch br-isolated bootOrder=2 (merge-patch+json, one line)
       uri:
         url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
         method: PATCH
         headers:
           Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
           Content-Type: application/merge-patch+json
-        body: '{"spec":{"template":{"spec":{"domain":{"devices":{"interfaces":[{"name":"br-isolated","bootOrder":2}]}}}}}}'
+        body: '{"spec":{"template":{"spec":{"domain":{"devices":{"interfaces":[{"name":"br-isolated","bootOrder":2}]}}, "networks":[{"name":"default","pod":{}},{"name":"br-ex-network","multus":{"networkName":"telco-tiger/br-ex-network"}},{"name":"br-isolated","multus":{"networkName":"telco-tiger/br-isolated"}}]}}}}'
         status_code: 200
         validate_certs: false
-
+    
     - name: Confirm patch applied – fetch VM
       uri:
         url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
@@ -139,10 +139,10 @@
         status_code: 200
         validate_certs: false
       register: vm_after_patch
-
+    
     - name: Show current bootOrder of br-isolated
       set_fact:
-        br_iso_boot: >-
+        br_iso_bo: >-
           {{
             (
               vm_after_patch.json.spec.template.spec.domain.devices.interfaces
@@ -150,10 +150,10 @@
               | list
             )[0].bootOrder
           }}
-
+    
     - name: Confirmed bootOrder
       debug:
-        msg: "br-isolated bootOrder is now {{ br_iso_boot }}"
+        msg: "br-isolated bootOrder is now {{ br_iso_bo }}"
 
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
