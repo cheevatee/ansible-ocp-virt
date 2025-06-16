@@ -118,32 +118,43 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Get index of the {{ pxe_interface_name }} interface
-      shell: >
-        oc get vm {{ name }} -n {{ namespace }} -o json |
-        jq -r '.spec.template.spec.domain.devices.interfaces
-               | to_entries[]
-               | select(.value.name=="{{ pxe_interface_name }}")
-               | .key'
-      register: pxe_interface_id
-      environment:
-        KUBECONFIG: "{{ kubeconfig_path }}"
 
-    - name: Debug: show interface index
-      debug:
-        msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
+    - name: Fetch the VM spec
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: vm_info
 
-    - name: Patch VM to add bootOrder=2 to {{ pxe_interface_name }}
-      shell: >
-        oc patch virtualmachine {{ name }} -n {{ namespace }} --type=json
-        -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id.stdout }}/bootOrder","value":2}]'
+    - name: Compute index of '{{ pxe_interface_name }}'
+      set_fact:
+        pxe_interface_id: >-
+          {{
+            vm_info.resources[0].spec.template.spec.domain.devices.interfaces
+            | to_entries
+            | selectattr('value.name','equalto', pxe_interface_name)
+            | map(attribute='key')
+            | first
+          }}
+
+    - name: Patch br-isolated to add bootOrder: 2
+      kubernetes.core.k8s:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+        state: present
+        merge_type: json       # sends application/json-patch+json
+        definition:
+          - op: add
+            path: "/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id }}/bootOrder"
+            value: 2
       register: patch_result
-      environment:
-        KUBECONFIG: "{{ kubeconfig_path }}"
 
-    - name: Show patch output
+    - name: Confirm patch result
       debug:
-        var: patch_result.stdout
+        var: patch_result
 
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
