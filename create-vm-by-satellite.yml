@@ -165,7 +165,7 @@
             virtual:   "{{ nic_virtual }}" ## 
             ip:        "{{ nic_ip }}" ## 
             mac:       "{{ pxe_interface_mac }}" ##
-            subnet_id: "{{ nic_subnet_id }}" ##
+            subnet:    "{{ nic_subnet_name }}" ##
             
         # Provisioning
         ptable:   "{{ partition_table }}" ##
