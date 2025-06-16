@@ -94,7 +94,7 @@
         template: virtualmachine-pxe-dynamic-interfaces.yml.j2
 #        template: virtualmachine.yml.j2
 
-    - name: Fetch br-isolated MAC from the VM spec
+    - name: Fetch {{ pxe_interface_name }} MAC from the VM spec
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachine       # <— note: VirtualMachine, not VirtualMachineInstance
@@ -102,21 +102,21 @@
         namespace: "{{ namespace }}"
       register: vm_spec_info
     
-    - name: Extract br-isolated MAC
+    - name: Extract {{ pxe_interface_name }} MAC
       set_fact:
         br_iso_mac: >-
           {{
             (
               vm_spec_info.resources[0]
                 .spec.template.spec.domain.devices.interfaces
-              | selectattr('name','equalto','br-isolated')
+              | selectattr('name','equalto','{{ pxe_interface_name }}')
               | list
             )[0].macAddress
           }}
     
-    - name: Show br-isolated MAC
+    - name: Show {{ pxe_interface_name }} MAC
       debug:
-        msg: "br-isolated MAC → {{ br_iso_mac }}"
+        msg: "{{ pxe_interface_name }} MAC → {{ pxe_interface_mac }}"
 
 
     - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
