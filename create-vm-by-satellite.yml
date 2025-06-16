@@ -1,5 +1,5 @@
 ---
-- name: "Create vm by satellite pxe"
+- name: "Create vm by satellite pxe boot"
   hosts: all
   gather_facts: yes
   vars_files:
@@ -197,30 +197,30 @@
           spec:
             running: true
        
-#    - name: Wait for VM to be ready
-#      kubernetes.core.k8s_info:
-#        api_version: kubevirt.io/v1
-#        kind: VirtualMachine
-#        name: "{{ name }}"
-#        namespace: "{{ namespace }}"
-#      register: deploy_collection_vm
-#      retries: 60
-#      delay: 10
-#      until:
-#      - deploy_collection_vm.resources[0].status is defined
-#      - deploy_collection_vm.resources[0].status.ready is true
+    - name: Wait for VM to be ready
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: deploy_collection_vm
+      retries: 60
+      delay: 10
+      until:
+      - deploy_collection_vm.resources[0].status is defined
+      - deploy_collection_vm.resources[0].status.ready is true
 
-#    - name: Wait for VM IP to be populated
-#      kubernetes.core.k8s_info:
-#        api_version: kubevirt.io/v1
-#        kind: VirtualMachineInstance
-#        name: "{{ name }}"
-#        namespace: "{{ namespace }}"
-#      register: deploy_collection_vmi
-#      retries: 60
-#      delay: 10
-#      until: (deploy_collection_vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
+    - name: Wait for VM IP to be populated
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: deploy_collection_vmi
+      retries: 60
+      delay: 10
+      until: (deploy_collection_vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
 
     - name: Confirm VM is Running
       ansible.builtin.debug:
-        msg: "Create VM {{ name }} completed"
+        msg: "Create VM {{ name }}.{{ fqdn }} completed"
