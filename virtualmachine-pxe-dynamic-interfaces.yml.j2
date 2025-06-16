@@ -20,6 +20,18 @@ metadata:
   name: {{ name }}
   namespace: {{ namespace }}
 spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: {{ name }}
+      spec:
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: {{ boot_image_size }}
   running: false               # VM will not auto-start; change to true if desired
   template:
     metadata:
@@ -71,8 +83,8 @@ spec:
       
       volumes:
       - name: rootdisk
-        emptyDisk:
-          capacity: {{ boot_image_size }}
+        dataVolume:
+          name: {{ name }}
 
       rng: {}
       evictionStrategy: LiveMigrate
