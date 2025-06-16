@@ -66,27 +66,6 @@
     - name: Print rendered J2 template
       ansible.builtin.debug:
         msg: "{{ j2_content }}"
-                          
-#    - name: Create host in Satellite
-#      theforeman.foreman.host:
-#        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
-#        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
-#        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
-#        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
-#        name: "{{ name }}.{{ fqdn }}"
-#        organization: "{{ host_organization }}"
-#        location: "{{ host_location }}"
-#        hostgroup: "{{ host_hostgroup }}"
-#        build: false
-#        managed: false
-#        interfaces_attributes:
-#          - managed: false
-#            provision: false
-#      register: created_host
-
-#    - name: Display created host details
-#      debug:
-#        var: created_host
 
     - name: Create VirtualMachine
       kubernetes.core.k8s:
@@ -151,6 +130,55 @@
       debug:
         msg: "{{ patch_result.stdout }}"
 
+########################################################################################
+
+    - name: Create host in Satellite
+      theforeman.foreman.host:
+        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
+        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
+        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
+        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
+        
+        # Identity
+        name: "{{ name }}.{{ fqdn }}"
+        organization: "{{ host_organization }}"
+        location: "{{ host_location }}"
+        
+        # Lifecycle/content
+        hostgroup: "{{ host_hostgroup }}"
+        lifecycle_environment: "{{ lifecycle_env }}" ##
+        content_source:        "{{ content_source }}" ##
+        content_view:          "{{ content_view }}" ##
+        
+        # OS & arch
+        architecture:       "{{ arch }}" ## 
+        operatingsystem:    "{{ os_name }}" ##
+        domain:             "{{ fqdn }}"
+        # Networking
+        interfaces:
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ nic_primary }}" ## 
+            managed:   "{{ nic_managed }}" ## 
+            provision: "{{ nic_provision }}" ## 
+            execution: "{{ nic_execution }}" ## 
+            virtual:   "{{ nic_virtual }}" ## 
+            ip:        "{{ nic_ip }}" ## 
+            mac:       "{{ pxe_interface_mac }}" ##
+            subnet_id: "{{ nic_subnet_id }}" ##
+        # Provisioning
+        partition_table:   "{{ partition_table }}" ##
+        pxe_loader:        "{{ pxe_loader }}" ##
+        provision_method:  build
+        build:             yes
+        enabled:           yes
+
+      register: created_host
+
+    - name: Show result
+      debug:
+        msg: "Host {{ name }}.{{ fqdn }} has been {{ 'created' if created_host.changed else 'updated' }} in Satellite."
+        
+########################################################################################     
         
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
