@@ -184,7 +184,19 @@
         msg: "Host {{ name }}.{{ fqdn }} has been {{ 'created' if created_host.changed else 'updated' }} in Satellite."
         
 ########################################################################################     
-        
+
+    - name: Start VirtualMachine "{{ name }}"
+      kubernetes.core.k8s:
+        state: merged
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: "{{ name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            running: true
+       
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
 #        api_version: kubevirt.io/v1
