@@ -118,13 +118,14 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Patch VM to set br-isolated as bootOrder 2
+    - name: Patch VM so that br-isolated is bootOrder=2
       kubernetes.core.k8s:
+        state: present
         api_version: kubevirt.io/v1
         kind: VirtualMachine
-        name: "{{ name }}"
+        name: "{{ vm_name }}"
         namespace: "{{ namespace }}"
-        merge_type: strategic-merge
+        patch_type: merge            # uses application/merge-patch+json
         definition:
           spec:
             template:
@@ -135,6 +136,10 @@
                     - name: br-isolated
                       bootOrder: 2
       register: patch_result
+    
+    - name: Confirm patch applied
+      debug:
+        var: patch_result
 
     - name: Confirm patch applied
       debug:
