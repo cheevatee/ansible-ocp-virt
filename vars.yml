@@ -20,10 +20,10 @@ password: "r3dh4t1!"
 host_organization: "RH01" #"Default Organization"
 host_location: "DC01" #"Default Location"
 host_hostgroup: "Lab Example" #"Default Host Group"
-lifecycle_env: Dev
-content_source: satellite01.apac.gps
-content_view: ccv_rhel9
-arch: x86_64
+lifecycle_env: "Dev"
+content_source: "satellite01.apac.gps"
+content_view: "ccv_rhel9"
+arch: "x86_64"
 os_name: "RHEL 9.6"
 nic_type: "Nic::Managed"
 nic_primary: false
