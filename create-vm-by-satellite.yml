@@ -119,11 +119,12 @@
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
 
-    - name: Login to OpenShift (skip TLS verify)
-      shell: |
-        oc login {{ k8s_host }} --token={{ k8s_token }} --insecure-skip-tls-verify
+    - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
+      shell: >-
+        oc login {{ lookup('env','K8S_AUTH_HOST') }} \
+        --token={{ lookup('env','K8S_AUTH_API_KEY') }} \
+        --insecure-skip-tls-verify
       register: login_result
-      changed_when: false
 
     - name: Get index of the {{ pxe_interface_name }} interface
       shell: |
