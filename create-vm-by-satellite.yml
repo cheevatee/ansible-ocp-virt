@@ -125,7 +125,7 @@
         kind: VirtualMachine
         name: "{{ name }}"
         namespace: "{{ namespace }}"
-        patch_type: merge            # uses application/merge-patch+json
+        merge_type: merge               # <-- use JSON‐merge patch
         definition:
           spec:
             template:
@@ -136,6 +136,10 @@
                     - name: br-isolated
                       bootOrder: 2
       register: patch_result
+    
+    - name: Confirm patch applied
+      debug:
+        var: patch_result
     
     - name: Confirm patch applied
       debug:
