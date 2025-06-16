@@ -56,6 +56,7 @@ spec:
             bridge: {}
           {% endfor %}
           {% endif %}
+          
       networks:
       # default pod network
       - name: default
@@ -67,6 +68,7 @@ spec:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
       {% endif %}
+      
       volumes:
       - name: rootdisk
         emptyDisk:
