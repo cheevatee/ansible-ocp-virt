@@ -119,42 +119,39 @@
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
 
-    - name: Fetch the VM spec
-      kubernetes.core.k8s_info:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-      register: vm_info
+    - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
+      shell: >-
+        oc login {{ lookup('env','K8S_AUTH_HOST') }} --token={{ lookup('env','K8S_AUTH_API_KEY') }} \
+        --insecure-skip-tls-verify
+      register: login_result
 
-    - name: Compute index of '{{ pxe_interface_name }}'
-      set_fact:
-        pxe_interface_id: >-
-          {{
-            vm_info.resources[0].spec.template.spec.domain.devices.interfaces
-            | to_entries
-            | selectattr('value.name','equalto', pxe_interface_name)
-            | map(attribute='key')
-            | first
-          }}
+    - name: Debug: show login result
+      debug:
+        var: login_result.stdout
 
-    - name: Patch br-isolated to add bootOrder 2
-      kubernetes.core.k8s:
-        api_version: kubevirt.io/v1
-        kind: VirtualMachine
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        state: present
-        merge_type: json       # sends application/json-patch+json
-        definition:
-          - op: add
-            path: "/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id }}/bootOrder"
-            value: 2
+    - name: Get index of the {{ pxe_interface_name }} interface
+      shell: >-
+        oc get vm {{ name }}} -n {{ namespace }} -o json |
+        jq -r '.spec.template.spec.domain.devices.interfaces
+               | to_entries[]
+               | select(.value.name=="{{ pxe_interface_name }}")
+               | .key'
+      register: pxe_interface_id
+
+    - name: Debug: show interface index
+      debug:
+        msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
+
+    - name: Patch VM to add bootOrder=2 to {{ pxe_interface_name }}
+      shell: >-
+        oc patch virtualmachine {{ name }}} -n {{ namespace }} --type=json \
+        -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/{{ pxe_interface_id.stdout }}/bootOrder","value":2}]' \
+        --insecure-skip-tls-verify
       register: patch_result
 
-    - name: Confirm patch result
+    - name: Show patch output
       debug:
-        var: patch_result
+        var: patch_result.stdout
 
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
