@@ -118,42 +118,36 @@
       debug:
         msg: "br-isolated MAC → {{ br_iso_mac }}"
 
-    - name: Patch br-isolated bootOrder=2 (merge-patch+json, one line)
-      uri:
-        url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
-        method: PATCH
-        headers:
-          Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
-          Content-Type: application/merge-patch+json
-        body: '{"spec":{"template":{"spec":{"domain":{"devices":{"interfaces":[{"name":"br-isolated","bootOrder":2}]}}, "networks":[{"name":"default","pod":{}},{"name":"br-ex-network","multus":{"networkName":"telco-tiger/br-ex-network"}},{"name":"br-isolated","multus":{"networkName":"telco-tiger/br-isolated"}}]}}}}'
-        status_code: 200
-        validate_certs: false
-    
-    - name: Confirm patch applied – fetch VM
-      uri:
-        url: "{{ lookup('env','K8S_AUTH_HOST') }}/apis/kubevirt.io/v1/namespaces/{{ namespace }}/virtualmachines/{{ name }}"
-        method: GET
-        headers:
-          Authorization: "Bearer {{ lookup('env','K8S_AUTH_API_KEY') }}"
-        return_content: yes
-        status_code: 200
-        validate_certs: false
-      register: vm_after_patch
-    
-    - name: Show current bootOrder of br-isolated
-      set_fact:
-        br_iso_bo: >-
-          {{
-            (
-              vm_after_patch.json.spec.template.spec.domain.devices.interfaces
-              | selectattr('name','equalto','br-isolated')
-              | list
-            )[0].bootOrder
-          }}
-    
-    - name: Confirmed bootOrder
+    - name: Apply JSON-Patch to set boot orders
+      shell: >-
+        oc patch virtualmachine {{ name }}
+          -n {{ namespace }}
+          --type=json
+          -p='[
+            {"op":"add","path":"/spec/template/spec/domain/devices/disks/0/bootOrder","value":1},
+            {"op":"add","path":"/spec/template/spec/domain/devices/interfaces/2/bootOrder","value":2}
+          ]'
+      register: patch_result
+      environment:
+        KUBECONFIG: "{{ lookup('env','KUBECONFIG') | default('~/.kube/config') }}"
+
+    - name: Show patch output
       debug:
-        msg: "br-isolated bootOrder is now {{ br_iso_bo }}"
+        msg: "{{ patch_result.stdout }}"
+
+    - name: Verify new boot orders
+      shell: >-
+        oc get vm {{ name }} -n {{ namespace }} \
+          -o jsonpath='{.spec.template.spec.domain.devices.disks[?(@.name=="rootdisk")].bootOrder}{"\n"}{.spec.template.spec.domain.devices.interfaces[?(@.name=="br-isolated")].bootOrder}{"\n"}'
+      register: verify
+      environment:
+        KUBECONFIG: "{{ lookup('env','KUBECONFIG') | default('~/.kube/config') }}"
+
+    - name: Display verified boot orders
+      debug:
+        msg:
+          - "rootdisk.bootOrder = {{ verify.stdout_lines[0] }}"
+          - "br-isolated.bootOrder = {{ verify.stdout_lines[1] }}"
 
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
