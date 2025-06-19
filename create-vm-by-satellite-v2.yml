@@ -108,7 +108,7 @@
     - name: Get index of the {{ pxe_interface_name }} interface
       shell: >
         oc get vm "{{ name }}" -n "{{ namespace }}" -o json | \
-        jq -r --arg iface "{{ pxe_interface_name }}" \
+        jq -r --arg iface "{{ pxe_interface_name | split('/') | last }}" \
           '.spec.template.spec.domain.devices.interfaces | to_entries[] | select(.value.name==$iface) | .key'
       register: pxe_interface_id
       changed_when: false
