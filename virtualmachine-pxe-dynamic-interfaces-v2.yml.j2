@@ -112,6 +112,9 @@ spec:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
       {% endif %}
+      - name: br-ex-network
+        multus:
+          networkName: telco-tiger/br-ex-network
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #      {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
