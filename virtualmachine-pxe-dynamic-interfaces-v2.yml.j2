@@ -82,7 +82,8 @@ spec:
 ###################################
 {% set real_length = net_attach_def | default([]) | length %} 
           {% set count = real_length if real_length > 0 else 1 %}
-- name: br-ex-network
+- name: {{ app_interface_name | split('/') | last }}
+#- name: br-ex-network
             model: virtio
             bridge: {}
           {% set bus_hex = '%02x' % (count + 2) %}
@@ -115,10 +116,11 @@ spec:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
       {% endif %}
-      
-      - name: br-ex-network
+
+      - name: {{ app_interface_name | split('/') | last }}
+#      - name: br-ex-network
         multus:
-          networkName: telco-tiger/br-ex-network
+          networkName: {{ app_interface_name }}
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #      {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
