@@ -87,7 +87,7 @@ spec:
           networkName: telco-tiger/br-ex-network
       - name: br-isolated
         multus:
-        networkName: telco-tiger/br-isolated
+          networkName: telco-tiger/br-isolated
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #      {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
