@@ -112,6 +112,7 @@ spec:
           networkName: {{ net_attach_def[i] }}
       {% endfor %}
       {% endif %}
+      
       - name: br-ex-network
         multus:
           networkName: telco-tiger/br-ex-network
