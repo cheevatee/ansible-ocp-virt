@@ -85,7 +85,7 @@ spec:
             model: virtio
             bridge: {}
           {% set bus_hex = '%02x' % (count + 2) %}
-            pciAddress: "0000:{{ bus_hex }}:00.0"
+pciAddress: "0000:{{ bus_hex }}:00.0"
 ###################################
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #          {% for i in range(net_attach_def | length) %}
