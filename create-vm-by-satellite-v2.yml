@@ -88,7 +88,7 @@
             (
               vm_spec_info.resources[0]
                 .spec.template.spec.domain.devices.interfaces
-              | selectattr('name','equalto',pxe_interface_name)
+              | selectattr('name','equalto',pxe_interface_name | split('/') | last)
               | list
             )[0].macAddress
           }}
