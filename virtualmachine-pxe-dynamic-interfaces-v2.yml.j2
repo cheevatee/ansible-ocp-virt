@@ -78,6 +78,15 @@ spec:
             pciAddress: "0000:{{ '%02x' % (i + 2) }}:00.0"
           {% endfor %}
           {% endif %}
+###################################
+{% set real_length = net_attach_def | default([]) | length %} 
+{% set count = real_length if real_length > 0 else 1 %}
+- name: {{ interface_names[i] if interface_names | default([]) | length > i else "eth" ~ (i+1) }}
+            model: virtio
+            bridge: {}
+          {% set bus_hex = '%02x' % (count + 2) %}
+            pciAddress: "0000:{{ bus_hex }}:00.0"
+###################################
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #          {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
