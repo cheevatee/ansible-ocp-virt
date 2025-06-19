@@ -62,14 +62,22 @@ spec:
 #          - name: default
 #            model: virtio
 #            masquerade: {}
-          - name: br-ex-network
-            model: virtio
-            bridge: {}
-            pciAddress: '0000:07:00.0'
+#          - name: br-ex-network
+#            model: virtio
+#            bridge: {}
+#            pciAddress: '0000:07:00.0'
           - name: br-isolated
             model: virtio
             bridge: {}
             pciAddress: "0000:01:00.0"
+{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
+          {% for i in range(net_attach_def | length) %}
+- name: {{ interface_names[i] }}
+            model: virtio
+            bridge: {}
+            pciAddress: "0000:{{ '%02x' % (i + 2) }}:00.0"
+          {% endfor %}
+          {% endif %}
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #          {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
@@ -82,12 +90,19 @@ spec:
       # default pod network
 #      - name: default
 #        pod: {}
-      - name: br-ex-network
-        multus:
-          networkName: telco-tiger/br-ex-network
+#      - name: br-ex-network
+#        multus:
+#          networkName: telco-tiger/br-ex-network
       - name: br-isolated
         multus:
           networkName: telco-tiger/br-isolated
+{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
+      {% for i in range(net_attach_def | length) %}
+- name: {{ interface_names[i] }}
+        multus:
+          networkName: {{ net_attach_def[i] }}
+      {% endfor %}
+      {% endif %}
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #      {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
