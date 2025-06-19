@@ -1,0 +1,42 @@
+---
+name: "rhel8-vm-01"
+namespace: "vms"
+fqdn: "lab.example.com" #"cluster-sjhn6.dynamic.redhatworkshops.io"
+url: "http://10.10.10.1/rhel-8.10-x86_64-kvm.qcow2"
+boot_image_size: "30Gi"
+vm_cpus_cores: 1
+vm_cpus_sockets: 1
+vm_cpus_threads: 1
+#macAddress: '01:3c:1a:00:00:00'
+#vm_machine_type: 'pc-q35-rhel9.4.0'
+vm_memory_requests: '2Gi'
+net_attach_def: [] #['default/br-vmdata', 'default/br-vmdata-dev', 'default/br-vmdata-prod', 'default/br-vmdata-test']
+interface_names: [] #['br-vmdata', 'br-vmdata-dev', 'br-vmdata-prod', 'br-vmdata-test']
+pxe_interface_name: "" #default/br-isolated
+app_interface_name: "" #default/net-100
+cloud_init_secret: cloud-init
+username: "cloud-user"
+password: "r3dh4t1!"
+############################################################
+host_organization: "RH01" #"Default Organization"
+host_location: "DC01" #"Default Location"
+host_hostgroup: "Lab Example" #"Default Host Group"
+lifecycle_env: "Dev"
+content_source: "satellite01.apac.gps"
+content_view: "ccv_rhel9"
+arch: "x86_64"
+os_name: "RHEL 9.6"
+nic_type: "interface"
+nic_primary: false
+nic_managed: true
+nic_provision: true
+nic_execution: true
+nic_virtual: false
+nic_ip: "168.192.10.22"
+pxe_interface_mac: "02:11:bf:00:00:13"
+nic_subnet_name: "Lab Example"
+partition_table: "Kickstart default"
+pxe_loader: "PXELinux BIOS"
+puppet_proxy: ""
+puppet_ca_proxy: ""
+host_activationkey: "RHEL8_Dev,RHEL7_Dev"
