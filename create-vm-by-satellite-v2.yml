@@ -132,70 +132,70 @@
 
 ########################################################################################
 
-#    - name: Create host in Satellite
-#      theforeman.foreman.host:
-#        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
-#        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
-#        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
-#        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
+    - name: Create host in Satellite
+      theforeman.foreman.host:
+        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
+        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
+        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
+        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
         
         # Identity
-#        name: "{{ name }}.{{ fqdn }}"
-#        domain: "{{ fqdn }}"
-#        organization: "{{ host_organization }}"
-#        location: "{{ host_location }}"
+        name: "{{ name }}.{{ fqdn }}"
+        domain: "{{ fqdn }}"
+        organization: "{{ host_organization }}"
+        location: "{{ host_location }}"
         
         # Lifecycle/content
-#        hostgroup: "{{ host_hostgroup }}"
-#        lifecycle_environment: "{{ lifecycle_env }}" ##
-#        content_source:        "{{ content_source }}" ##
-#        content_view:          "{{ content_view }}" ##
+        hostgroup: "{{ host_hostgroup }}"
+        lifecycle_environment: "{{ lifecycle_env }}" ##
+        content_source:        "{{ content_source }}" ##
+        content_view:          "{{ content_view }}" ##
         
         # OS & arch
-#        architecture:       "{{ arch }}" ## 
-#        operatingsystem:    "{{ os_name }}" ##
+        architecture:       "{{ arch }}" ## 
+        operatingsystem:    "{{ os_name }}" ##
 
         # Networking
-#        interfaces_attributes:
-#          - type:      "{{ nic_type }}" ##
-#            primary:   "{{ nic_primary }}" ## 
-#            managed:   "{{ nic_managed }}" ## 
-#            provision: "{{ nic_provision }}" ## 
-#            execution: "{{ nic_execution }}" ## 
-#            virtual:   "{{ nic_virtual }}" ## 
-#            ip:        "{{ nic_ip }}" ## 
-#            mac:       "{{ pxe_interface_mac }}" ##
-#            subnet:    "{{ nic_subnet_name }}" ##
+        interfaces_attributes:
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ nic_primary }}" ## 
+            managed:   "{{ nic_managed }}" ## 
+            provision: "{{ nic_provision }}" ## 
+            execution: "{{ nic_execution }}" ## 
+            virtual:   "{{ nic_virtual }}" ## 
+            ip:        "{{ nic_ip }}" ## 
+            mac:       "{{ pxe_interface_mac }}" ##
+            subnet:    "{{ nic_subnet_name }}" ##
             
         # Provisioning
-#        ptable:   "{{ partition_table }}" ##
-#        pxe_loader:        "{{ pxe_loader }}" ##
-#        provision_method:  build
-#        build:             yes
-#        enabled:           yes
+        ptable:   "{{ partition_table }}" ##
+        pxe_loader:        "{{ pxe_loader }}" ##
+        provision_method:  build
+        build:             yes
+        enabled:           yes
 
-#        puppet_proxy: "{{ puppet_proxy }}"
-#        puppet_ca_proxy: "{{ puppet_ca_proxy }}"
+        puppet_proxy: "{{ puppet_proxy }}"
+        puppet_ca_proxy: "{{ puppet_ca_proxy }}"
 
-#      register: created_host
+      register: created_host
 
-#    - name: Show result
-#      debug:
-#        msg: "Host {{ name }}.{{ fqdn }} has been {{ 'created' if created_host.changed else 'updated' }} in Satellite."
+    - name: Show result
+      debug:
+        msg: "Host {{ name }}.{{ fqdn }} has been {{ 'created' if created_host.changed else 'updated' }} in Satellite."
         
 ########################################################################################     
 
-#    - name: Start VirtualMachine "{{ name }}"
-#      kubernetes.core.k8s:
-#        state: patched
-#        definition:
-#          apiVersion: kubevirt.io/v1
-#          kind: VirtualMachine
-#          metadata:
-#            name: "{{ name }}"
-#            namespace: "{{ namespace }}"
-#          spec:
-#            running: true
+    - name: Start VirtualMachine "{{ name }}"
+      kubernetes.core.k8s:
+        state: patched
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: "{{ name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            running: true
        
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
