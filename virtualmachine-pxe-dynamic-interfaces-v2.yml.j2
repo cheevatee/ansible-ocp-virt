@@ -59,29 +59,42 @@ spec:
             bootOrder: 1
           interfaces:
           # default pod network interface
-          - name: default
-            model: virtio
-            masquerade: {}
-            pciAddress: "0000:81:00.1"
-{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
-          {% for i in range(net_attach_def | length) %}
-- name: {{ interface_names[i] }}
+#          - name: default
+#            model: virtio
+#            masquerade: {}
+          - name: br-ex-network
             model: virtio
             bridge: {}
-          {% endfor %}
-          {% endif %}
+            pciAddress: '0000:07:00.0'
+          - name: br-isolated
+            model: virtio
+            bridge: {}
+            pciAddress: "0000:4b:00.0"
+#{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
+#          {% for i in range(net_attach_def | length) %}
+#- name: {{ interface_names[i] }}
+#            model: virtio
+#            bridge: {}
+#          {% endfor %}
+#          {% endif %}
           
       networks:
       # default pod network
-      - name: default
-        pod: {}
-{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
-      {% for i in range(net_attach_def | length) %}
-- name: {{ interface_names[i] }}
+#      - name: default
+#        pod: {}
+      - name: br-ex-network
         multus:
-          networkName: {{ net_attach_def[i] }}
-      {% endfor %}
-      {% endif %}
+          networkName: telco-tiger/br-ex-network
+      - name: br-isolated
+        multus:
+        networkName: telco-tiger/br-isolated
+#{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
+#      {% for i in range(net_attach_def | length) %}
+#- name: {{ interface_names[i] }}
+#        multus:
+#          networkName: {{ net_attach_def[i] }}
+#      {% endfor %}
+#      {% endif %}
       
       volumes:
       - name: rootdisk
