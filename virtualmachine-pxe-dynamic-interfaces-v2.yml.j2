@@ -120,10 +120,12 @@ spec:
       {% endfor %}
       {% endif %}
 
-      - name: {{ app_interface_name | split('/') | last }}
+          {% if app_interface_name %}
+- name: {{ app_interface_name | split('/') | last }}
 #      - name: br-ex-network
         multus:
           networkName: {{ app_interface_name }}
+          {% endif %}
 #{% if net_attach_def | default([]) | length > 0 and interface_names | default([]) | length > 0 and (net_attach_def | length == interface_names | length) %}
 #      {% for i in range(net_attach_def | length) %}
 #- name: {{ interface_names[i] }}
