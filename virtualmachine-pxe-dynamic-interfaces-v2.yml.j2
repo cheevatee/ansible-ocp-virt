@@ -81,7 +81,8 @@ spec:
           {% endif %}
 ###################################
 {% set real_length = net_attach_def | default([]) | length %} 
-          {% set count = real_length if real_length > 0 else 1 %}
+          {% set count = real_length if real_length > 0 else 0 %}
+#          {% set count = real_length if real_length > 0 else 1 %}
 - name: {{ app_interface_name | split('/') | last }}
 #- name: br-ex-network
             model: virtio
