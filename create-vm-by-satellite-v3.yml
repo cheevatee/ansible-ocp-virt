@@ -1,0 +1,237 @@
+---
+- name: "Create vm by satellite pxe boot"
+  hosts: all
+  gather_facts: yes
+  vars_files:
+    - vars-v2.yml
+
+  tasks:
+    - name: Print the entire ansible_env dictionary
+      debug:
+        var: ansible_env
+  
+    - name: Debug show injected Satellite env vars
+      debug:
+        msg:
+          - "FOREMAN_HOST      = {{ ansible_env.FOREMAN_HOST | default('undefined') }}"
+          - "FOREMAN_USERNAME  = {{ ansible_env.FOREMAN_USERNAME | default('undefined') }}"
+          - "FOREMAN_PASSWORD  = {{ ansible_env.FOREMAN_PASSWORD | default('undefined') }}"
+          - "FOREMAN_VALIDATE_CERTS  = {{ ansible_env.FOREMAN_VALIDATE_CERTS | default('undefined') }}"
+
+    - name: Set activationkey as comma-separated string
+      ansible.builtin.set_fact:
+        activationkey: "{{ host_activationkey
+                          | replace('[', '')
+                          | replace(']', '')
+                          | replace(\"'\", '')
+                          | replace(', ', ',') }}"
+
+    - name: Print net_attach_def 1
+      ansible.builtin.debug:
+        msg:
+          - "net_attach_def: {{ net_attach_def }}"
+          - "interfaces: {{ interface_names }}"
+
+    - block:
+        - name: Normalize attach_list_str
+          ansible.builtin.set_fact:
+            attach_list_str: "{{ (net_attach_def is sequence) and (net_attach_def | join(',')) or (net_attach_def | string | trim('[] ')) }}"
+
+        - name: Turn attach_list_str into list
+          ansible.builtin.set_fact:
+            attach_list_list: "{{ attach_list_str == '' and [] or attach_list_str.split(',') }}"
+
+        - name: Derive interface names
+          ansible.builtin.set_fact:
+            interface_names: "{{ attach_list_list | map('split','/') | map('last') | list }}"
+
+        - name: Print planned attachments
+          ansible.builtin.debug:
+            msg:
+              - "net_attach_def: {{ net_attach_def }}"
+              - "attachments: {{ attach_list_list }}"
+              - "interfaces: {{ interface_names }}"
+      when: net_attach_def != '' or net_attach_def != '[]'
+
+    - name: Print net_attach_def 2
+      ansible.builtin.debug:
+        msg:
+          - "net_attach_def: {{ net_attach_def }}"
+          - "interfaces: {{ interface_names }}"
+
+    - name: Load Jinja2 template into a variable
+      ansible.builtin.set_fact:
+        j2_content: "{{ lookup('template', 'virtualmachine-pxe-dynamic-interfaces-v2.yml.j2') }}"
+
+    - name: Print rendered J2 template
+      ansible.builtin.debug:
+        msg: "{{ j2_content }}"
+
+    - name: Create VirtualMachine
+      kubernetes.core.k8s:
+        state: present
+        template: virtualmachine-pxe-dynamic-interfaces-v2.yml.j2
+#        template: virtualmachine.yml.j2
+
+    - name: Fetch {{ pxe_interface_name }} MAC from the VM spec
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine       # <— note: VirtualMachine, not VirtualMachineInstance
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: vm_spec_info
+    
+    - name: Extract {{ pxe_interface_name }} MAC
+      set_fact:
+        pxe_interface_mac: >-
+          {{
+            (
+              vm_spec_info.resources[0]
+                .spec.template.spec.domain.devices.interfaces
+              | selectattr('name','equalto',pxe_interface_name | split('/') | last)
+              | list
+            )[0].macAddress
+          }}
+    
+    - name: Show {{ pxe_interface_name }} MAC
+      debug:
+        msg: "{{ pxe_interface_name }} MAC → {{ pxe_interface_mac }}"
+
+
+    - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
+      shell: >-
+        oc login {{ lookup('env','K8S_AUTH_HOST') }} \
+        --token={{ lookup('env','K8S_AUTH_API_KEY') }} \
+        --insecure-skip-tls-verify
+      register: login_result
+
+    - name: Get index of the {{ pxe_interface_name }} interface
+      shell: >
+        oc get vm "{{ name }}" -n "{{ namespace }}" -o json | \
+        jq -r --arg iface "{{ pxe_interface_name | split('/') | last }}" \
+          '.spec.template.spec.domain.devices.interfaces | to_entries[] | select(.value.name==$iface) | .key'
+      register: pxe_interface_id
+      changed_when: false
+
+    - name: Show interface index
+      debug:
+        msg: "Interface {{ pxe_interface_name }} index = {{ pxe_interface_id.stdout }}"
+
+    - name: Patch VM to add bootOrder=2 to {{ pxe_interface_name }}
+      shell: >
+        oc patch virtualmachine "{{ name }}" \
+          -n "{{ namespace }}" \
+          --type=json \
+          -p '[{"op":"add","path":"/spec/template/spec/domain/devices/interfaces/'"{{ pxe_interface_id.stdout }}"'/bootOrder","value":2}]' \
+          --insecure-skip-tls-verify
+      register: patch_result
+
+    - name: Show patch output
+      debug:
+        msg: "{{ patch_result.stdout }}"
+
+########################################################################################
+
+    - name: Create host in Satellite
+      theforeman.foreman.host:
+        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
+        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
+        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
+        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
+        
+        # Identity
+        name: "{{ name }}.{{ fqdn }}"
+        domain: "{{ fqdn }}"
+        organization: "{{ host_organization }}"
+        location: "{{ host_location }}"
+        
+        # Lifecycle/content
+        hostgroup: "{{ host_hostgroup }}"
+        lifecycle_environment: "{{ lifecycle_env }}" ##
+        content_source:        "{{ content_source }}" ##
+        content_view:          "{{ content_view }}" ##
+        
+        # OS & arch
+        architecture:       "{{ arch }}" ## 
+        operatingsystem:    "{{ os_name }}" ##
+
+        # Networking
+        interfaces_attributes:
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ nic_primary }}" ## 
+            managed:   "{{ nic_managed }}" ## 
+            provision: "{{ nic_provision }}" ## 
+            execution: "{{ nic_execution }}" ## 
+            virtual:   "{{ nic_virtual }}" ## 
+            ip:        "{{ nic_ip }}" ## 
+            mac:       "{{ pxe_interface_mac }}" ##
+            subnet:    "{{ nic_subnet_name }}" ##
+            
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ app_nic_primary }}" ## 
+            managed:   "{{ app_nic_managed }}" ## 
+            provision: "{{ app_nic_provision }}" ## 
+            execution: "{{ app_nic_execution }}" ## 
+            virtual:   "{{ nic_virtual }}" ## 
+            ip:        "{{ app_nic_ip }}" ## 
+            mac:       "{{ app_interface_mac }}" ##
+            subnet:    "{{ app_nic_subnet_name }}" ##
+            name:      "{{ name }}.{{ fqdn }}"
+            
+        # Provisioning
+        ptable:   "{{ partition_table }}" ##
+        pxe_loader:        "{{ pxe_loader }}" ##
+        provision_method:  build
+        build:             yes
+        enabled:           yes
+
+        puppet_proxy: "{{ puppet_proxy }}"
+        puppet_ca_proxy: "{{ puppet_ca_proxy }}"
+
+      register: created_host
+
+    - name: Show result
+      debug:
+        msg: "Host {{ name }}.{{ fqdn }} has been {{ 'created' if created_host.changed else 'updated' }} in Satellite."
+        
+########################################################################################     
+
+    - name: Start VirtualMachine "{{ name }}"
+      kubernetes.core.k8s:
+        state: patched
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: "{{ name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            running: true
+       
+#    - name: Wait for VM to be ready
+#      kubernetes.core.k8s_info:
+#        api_version: kubevirt.io/v1
+#        kind: VirtualMachine
+#        name: "{{ name }}"
+#        namespace: "{{ namespace }}"
+#      register: deploy_collection_vm
+#      retries: 60
+#      delay: 10
+#      until:
+#      - deploy_collection_vm.resources[0].status is defined
+#      - deploy_collection_vm.resources[0].status.ready is true
+
+#    - name: Wait for VM IP to be populated
+#      kubernetes.core.k8s_info:
+#        api_version: kubevirt.io/v1
+#        kind: VirtualMachineInstance
+#        name: "{{ name }}"
+#        namespace: "{{ namespace }}"
+#      register: deploy_collection_vmi
+#      retries: 60
+#      delay: 10
+#      until: (deploy_collection_vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
+
+#    - name: Confirm VM is Running
+#      ansible.builtin.debug:
+#        msg: "Create VM {{ name }}.{{ fqdn }} completed"
