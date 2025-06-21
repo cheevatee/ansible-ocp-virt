@@ -205,7 +205,7 @@
                    'subnet':    app_nic_subnet_name,
                    'name':      name ~ '.' ~ fqdn
                  } ]
-#               or []
+               []
              )
           }}
             
