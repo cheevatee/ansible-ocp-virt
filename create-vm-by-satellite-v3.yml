@@ -169,23 +169,21 @@
                'mac':       pxe_interface_mac,
                'subnet':    nic_subnet_name
              } ]
-             +
-             ( app_interface_name | default('') | length > 0
-               | ternary(
-                   [ {
-                     'type':      nic_type,
-                     'primary':   app_nic_primary,
-                     'managed':   app_nic_managed,
-                     'provision': app_nic_provision,
-                     'execution': app_nic_execution,
-                     'virtual':   app_nic_virtual,
-                     'ip':        app_nic_ip,
-                     'mac':       app_interface_mac,
-                     'subnet':    app_nic_subnet_name,
-                     'name':      name ~ '.' ~ fqdn
-                   } ],
-                   []
-                 )
+             + (
+               [ {
+                 'type':      nic_type,
+                 'primary':   app_nic_primary,
+                 'managed':   app_nic_managed,
+                 'provision': app_nic_provision,
+                 'execution': app_nic_execution,
+                 'virtual':   app_nic_virtual,
+                 'ip':        app_nic_ip,
+                 'mac':       app_interface_mac,
+                 'subnet':    app_nic_subnet_name,
+                 'name':      name ~ '.' ~ fqdn
+               } ]
+               if (app_interface_name | default('') | length) > 0
+               else []
              )
           }}
 
