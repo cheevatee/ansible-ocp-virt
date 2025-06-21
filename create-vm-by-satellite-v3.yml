@@ -97,21 +97,23 @@
       debug:
         msg: "{{ pxe_interface_name }} MAC → {{ pxe_interface_mac }}"
 
-    - name: Extract {{ app_interface_name }} MAC
-      set_fact:
-        app_interface_mac: >-
-          {{
-            (
-              vm_spec_info.resources[0]
-                .spec.template.spec.domain.devices.interfaces
-              | selectattr('name','equalto',app_interface_name | split('/') | last)
-              | list
-            )[0].macAddress
-          }}
-    
-    - name: Show {{ app_interface_name }} MAC
-      debug:
-        msg: "{{ app_interface_name }} MAC → {{ app_interface_mac }}"
+    - block:
+        - name: Extract {{ app_interface_name }} MAC
+          set_fact:
+            app_interface_mac: >-
+              {{
+                (
+                  vm_spec_info.resources[0]
+                    .spec.template.spec.domain.devices.interfaces
+                  | selectattr('name','equalto',app_interface_name | split('/') | last)
+                  | list
+                )[0].macAddress
+              }}
+        
+        - name: Show {{ app_interface_name }} MAC
+          debug:
+            msg: "{{ app_interface_name }} MAC → {{ app_interface_mac }}"
+      when: app_interface_name != '' or app_interface_name != '[]'
 
     - name: Login to OpenShift using K8S_AUTH_HOST and API_KEY (skip TLS verify)
       shell: >-
