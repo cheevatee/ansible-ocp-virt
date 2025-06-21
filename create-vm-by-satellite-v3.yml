@@ -101,14 +101,14 @@
         - name: "Extract {{ app_interface_name }} MAC"
           set_fact:
             app_interface_mac: >-
-              "{{
+              {{
                 (
                   vm_spec_info.resources[0]
                     .spec.template.spec.domain.devices.interfaces
                   | selectattr('name','equalto',app_interface_name | split('/') | last)
                   | list
                 )[0].macAddress
-              }}"
+              }}
         
         - name: "Show {{ app_interface_name }} MAC"
           debug:
