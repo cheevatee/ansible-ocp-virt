@@ -155,63 +155,64 @@
 
 ########################################################################################
 
-#    - name: Create host in Satellite
-#      theforeman.foreman.host:
-#        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
-#        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
-#        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
-#        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
+    - name: Create host in Satellite
+      theforeman.foreman.host:
+        server_url:  "{{ ansible_env.FOREMAN_HOST }}"
+        username:    "{{ ansible_env.FOREMAN_USERNAME }}"
+        password:    "{{ ansible_env.FOREMAN_PASSWORD }}"
+        validate_certs: "{{ ansible_env.FOREMAN_VALIDATE_CERTS }}"
         
-#        # Identity
-#        name: "{{ name }}.{{ fqdn }}"
-#        domain: "{{ fqdn }}"
-#        organization: "{{ host_organization }}"
-#        location: "{{ host_location }}"
+        # Identity
+        name: "{{ name }}.{{ fqdn }}"
+        domain: "{{ fqdn }}"
+        organization: "{{ host_organization }}"
+        location: "{{ host_location }}"
         
-#        # Lifecycle/content
-#        hostgroup: "{{ host_hostgroup }}"
-#        lifecycle_environment: "{{ lifecycle_env }}" ##
-#        content_source:        "{{ content_source }}" ##
-#        content_view:          "{{ content_view }}" ##
+        # Lifecycle/content
+        hostgroup: "{{ host_hostgroup }}"
+        lifecycle_environment: "{{ lifecycle_env }}" ##
+        content_source:        "{{ content_source }}" ##
+        content_view:          "{{ content_view }}" ##
         
-#        # OS & arch
-#        architecture:       "{{ arch }}" ## 
-#        operatingsystem:    "{{ os_name }}" ##
+        # OS & arch
+        architecture:       "{{ arch }}" ## 
+        operatingsystem:    "{{ os_name }}" ##
 
-#        # Networking
-#        interfaces_attributes:
-#          - type:      "{{ nic_type }}" ##
-#            primary:   "{{ nic_primary }}" ## 
-#            managed:   "{{ nic_managed }}" ## 
-#            provision: "{{ nic_provision }}" ## 
-#            execution: "{{ nic_execution }}" ## 
-#            virtual:   "{{ nic_virtual }}" ## 
-#            ip:        "{{ nic_ip }}" ## 
-#            mac:       "{{ pxe_interface_mac }}" ##
-#            subnet:    "{{ nic_subnet_name }}" ##
+        # Networking
+        interfaces_attributes:
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ nic_primary }}" ## 
+            managed:   "{{ nic_managed }}" ## 
+            provision: "{{ nic_provision }}" ## 
+            execution: "{{ nic_execution }}" ## 
+            virtual:   "{{ nic_virtual }}" ## 
+            ip:        "{{ nic_ip }}" ## 
+            mac:       "{{ pxe_interface_mac }}" ##
+            subnet:    "{{ nic_subnet_name }}" ##
+          {% if app_interface_name|default('')|length > 0 %}
+          - type:      "{{ nic_type }}" ##
+            primary:   "{{ app_nic_primary }}" ## 
+            managed:   "{{ app_nic_managed }}" ## 
+            provision: "{{ app_nic_provision }}" ## 
+            execution: "{{ app_nic_execution }}" ## 
+            virtual:   "{{ app_nic_virtual }}" ## 
+            ip:        "{{ app_nic_ip }}" ## 
+            mac:       "{{ app_interface_mac }}" ##
+            subnet:    "{{ app_nic_subnet_name }}" ##
+            name:      "{{ name }}.{{ fqdn }}"
+          {% endif %}
             
-#          - type:      "{{ nic_type }}" ##
-#            primary:   "{{ app_nic_primary }}" ## 
-#            managed:   "{{ app_nic_managed }}" ## 
-#            provision: "{{ app_nic_provision }}" ## 
-#            execution: "{{ app_nic_execution }}" ## 
-#            virtual:   "{{ app_nic_virtual }}" ## 
-#            ip:        "{{ app_nic_ip }}" ## 
-#            mac:       "{{ app_interface_mac }}" ##
-#            subnet:    "{{ app_nic_subnet_name }}" ##
-#            name:      "{{ name }}.{{ fqdn }}"
-            
-#        # Provisioning
-#        ptable:   "{{ partition_table }}" ##
-#        pxe_loader:        "{{ pxe_loader }}" ##
-#        provision_method:  build
-#        build:             yes
-#        enabled:           yes
+        # Provisioning
+        ptable:   "{{ partition_table }}" ##
+        pxe_loader:        "{{ pxe_loader }}" ##
+        provision_method:  build
+        build:             yes
+        enabled:           yes
 
-#        puppet_proxy: "{{ puppet_proxy }}"
-#        puppet_ca_proxy: "{{ puppet_ca_proxy }}"
+        puppet_proxy: "{{ puppet_proxy }}"
+        puppet_ca_proxy: "{{ puppet_ca_proxy }}"
 
-#      register: created_host
+      register: created_host
 
 #    - name: Show result
 #      debug:
