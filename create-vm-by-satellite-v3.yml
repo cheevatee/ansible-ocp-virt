@@ -187,7 +187,7 @@
 #            managed:   "{{ app_nic_managed }}" ## 
 #            provision: "{{ app_nic_provision }}" ## 
 #            execution: "{{ app_nic_execution }}" ## 
-#            virtual:   "{{ nic_virtual }}" ## 
+#            virtual:   "{{ app_nic_virtual }}" ## 
 #            ip:        "{{ app_nic_ip }}" ## 
 #            mac:       "{{ app_interface_mac }}" ##
 #            subnet:    "{{ app_nic_subnet_name }}" ##
