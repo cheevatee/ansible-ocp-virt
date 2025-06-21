@@ -247,17 +247,17 @@
         
 ########################################################################################     
 
-#    - name: Start VirtualMachine "{{ name }}"
-#      kubernetes.core.k8s:
-#        state: patched
-#        definition:
-#          apiVersion: kubevirt.io/v1
-#          kind: VirtualMachine
-#          metadata:
-#            name: "{{ name }}"
-#            namespace: "{{ namespace }}"
-#          spec:
-#            running: true
+    - name: Start VirtualMachine "{{ name }}"
+      kubernetes.core.k8s:
+        state: patched
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: "{{ name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            running: true
        
 #    - name: Wait for VM to be ready
 #      kubernetes.core.k8s_info:
