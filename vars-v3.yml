@@ -42,7 +42,7 @@ puppet_ca_proxy: ""
 host_activationkey: "RHEL8_Dev,RHEL7_Dev"
 
 app_nic_primary: true
-app_nic_managed: false
+app_nic_managed: true
 app_nic_provision: false
 app_nic_execution: false
 app_nic_virtual: false
