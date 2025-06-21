@@ -158,30 +158,52 @@
     - name: Build Satellite interface list
       ansible.builtin.set_fact:
         interfaces_attributes: >-
-          {{ [ {
-               'type':      nic_type,
-               'primary':   nic_primary,
-               'managed':   nic_managed,
-               'provision': nic_provision,
-               'execution': nic_execution,
-               'virtual':   nic_virtual,
-               'ip':        nic_ip,
-               'mac':       pxe_interface_mac,
-               'subnet':    nic_subnet_name
-             } ]
-             + (
+          {{ (
+               # first entry: merge in {"name":…} only if nic_primary is true
+               [ 
+                 (
+                   {
+                     'type':      nic_type,
+                     'primary':   nic_primary,
+                     'managed':   nic_managed,
+                     'provision': nic_provision,
+                     'execution': nic_execution,
+                     'virtual':   nic_virtual,
+                     'ip':        nic_ip,
+                     'mac':       pxe_interface_mac,
+                     'subnet':    nic_subnet_name
+                   }
+                   | combine({'name': name ~ '.' ~ fqdn}) 
+                   if nic_primary else
+                   {
+                     'type':      nic_type,
+                     'primary':   nic_primary,
+                     'managed':   nic_managed,
+                     'provision': nic_provision,
+                     'execution': nic_execution,
+                     'virtual':   nic_virtual,
+                     'ip':        nic_ip,
+                     'mac':       pxe_interface_mac,
+                     'subnet':    nic_subnet_name
+                   }
+                 )
+               ]
+             )
+             +
+             # optionally append the app interface if app_interface_name is set
+             (
                [ {
-                 'type':      nic_type,
-                 'primary':   app_nic_primary,
-                 'managed':   app_nic_managed,
-                 'provision': app_nic_provision,
-                 'execution': app_nic_execution,
-                 'virtual':   app_nic_virtual,
-                 'ip':        app_nic_ip,
-                 'mac':       app_interface_mac,
-                 'subnet':    app_nic_subnet_name,
-                 'name':      name ~ '.' ~ fqdn
-               } ]
+                   'type':      nic_type,
+                   'primary':   app_nic_primary,
+                   'managed':   app_nic_managed,
+                   'provision': app_nic_provision,
+                   'execution': app_nic_execution,
+                   'virtual':   app_nic_virtual,
+                   'ip':        app_nic_ip,
+                   'mac':       app_interface_mac,
+                   'subnet':    app_nic_subnet_name,
+                   'name':      name ~ '.' ~ fqdn
+                 } ]
                if (app_interface_name | default('') | length) > 0
                else []
              )
