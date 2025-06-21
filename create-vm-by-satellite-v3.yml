@@ -189,7 +189,7 @@
             ip:        "{{ nic_ip }}" ## 
             mac:       "{{ pxe_interface_mac }}" ##
             subnet:    "{{ nic_subnet_name }}" ##
-          {% if app_interface_name|default('')|length > 0 %}
+
           - type:      "{{ nic_type }}" ##
             primary:   "{{ app_nic_primary }}" ## 
             managed:   "{{ app_nic_managed }}" ## 
@@ -200,7 +200,6 @@
             mac:       "{{ app_interface_mac }}" ##
             subnet:    "{{ app_nic_subnet_name }}" ##
             name:      "{{ name }}.{{ fqdn }}"
-          {% endif %}
             
         # Provisioning
         ptable:   "{{ partition_table }}" ##
