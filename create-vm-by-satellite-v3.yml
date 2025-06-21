@@ -98,7 +98,7 @@
         msg: "{{ pxe_interface_name }} MAC → {{ pxe_interface_mac }}"
 
     - block:
-        - name: Extract {{ app_interface_name }} MAC
+        - name: "Extract {{ app_interface_name }} MAC"
           set_fact:
             app_interface_mac: >-
               {{
@@ -110,7 +110,7 @@
                 )[0].macAddress
               }}
         
-        - name: Show {{ app_interface_name }} MAC
+        - name: "Show {{ app_interface_name }} MAC"
           debug:
             msg: "{{ app_interface_name }} MAC → {{ app_interface_mac }}"
       when: app_interface_name != '' or app_interface_name != '[]'
