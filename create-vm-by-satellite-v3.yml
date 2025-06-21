@@ -155,6 +155,40 @@
 
 ########################################################################################
 
+    - name: Build Satellite interface list
+      ansible.builtin.set_fact:
+        interfaces_attributes: >-
+          {{ [ {
+               'type':      nic_type,
+               'primary':   nic_primary,
+               'managed':   nic_managed,
+               'provision': nic_provision,
+               'execution': nic_execution,
+               'virtual':   nic_virtual,
+               'ip':        nic_ip,
+               'mac':       pxe_interface_mac,
+               'subnet':    nic_subnet_name
+             } ]
+             +
+             ( app_interface_name | default('') | length > 0
+               | ternary(
+                   [ {
+                     'type':      nic_type,
+                     'primary':   app_nic_primary,
+                     'managed':   app_nic_managed,
+                     'provision': app_nic_provision,
+                     'execution': app_nic_execution,
+                     'virtual':   app_nic_virtual,
+                     'ip':        app_nic_ip,
+                     'mac':       app_interface_mac,
+                     'subnet':    app_nic_subnet_name,
+                     'name':      name ~ '.' ~ fqdn
+                   } ],
+                   []
+                 )
+             )
+          }}
+
     - name: Create host in Satellite
       theforeman.foreman.host:
         server_url:  "{{ ansible_env.FOREMAN_HOST }}"
@@ -179,35 +213,7 @@
         operatingsystem:    "{{ os_name }}" ##
 
         # Networking
-        interfaces_attributes: >-
-          {{ [ {
-               'type':      nic_type,
-               'primary':   nic_primary,
-               'managed':   nic_managed,
-               'provision': nic_provision,
-               'execution': nic_execution,
-               'virtual':   nic_virtual,
-               'ip':        nic_ip,
-               'mac':       pxe_interface_mac,
-               'subnet':    nic_subnet_name
-             } ]
-             + (
-                 (app_interface_name | default('') | length > 0)
-                 and [ {
-                     'type':      nic_type,
-                     'primary':   app_nic_primary,
-                     'managed':   app_nic_managed,
-                     'provision': app_nic_provision,
-                     'execution': app_nic_execution,
-                     'virtual':   app_nic_virtual,
-                     'ip':        app_nic_ip,
-                     'mac':       app_interface_mac,
-                     'subnet':    app_nic_subnet_name,
-                     'name':      name ~ '.' ~ fqdn
-                   } ]
-                 or []
-               )
-          }}
+        interfaces_attributes: "{{ interfaces_attributes }}"
             
         # Provisioning
         ptable:   "{{ partition_table }}" ##
