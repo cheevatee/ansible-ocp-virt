@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: yes
   vars_files:
-    - vars-v2.yml
+    - vars-v3.yml
 
   tasks:
     - name: Print the entire ansible_env dictionary
