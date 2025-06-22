@@ -240,6 +240,9 @@
         puppet_proxy: "{{ puppet_proxy }}"
         puppet_ca_proxy: "{{ puppet_ca_proxy }}"
 
+        # Specifies the host’s root password
+        root_pass: 'NewSecureP@ssw0rd'
+        
       register: created_host
 
     - name: Show result
