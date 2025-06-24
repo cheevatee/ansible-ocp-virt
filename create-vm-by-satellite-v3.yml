@@ -250,7 +250,7 @@
 
         parameters:
           - name: sda_disk_size
-            value: {{ boot_image_size }}
+            value: "{{ boot_image_size }}"
             parameter_type: integer
 
         # Specifies the host’s root password
