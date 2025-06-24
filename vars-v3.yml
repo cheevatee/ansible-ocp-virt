@@ -4,6 +4,7 @@ namespace: "vms"
 fqdn: "lab.example.com" #"cluster-sjhn6.dynamic.redhatworkshops.io"
 url: "http://10.10.10.1/rhel-8.10-x86_64-kvm.qcow2"
 boot_image_size: "30Gi"
+boot_image_sc: "ocs-external-storagecluster-ceph-rbd"
 vm_cpus_cores: 1
 vm_cpus_sockets: 1
 vm_cpus_threads: 1
