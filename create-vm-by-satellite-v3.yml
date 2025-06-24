@@ -264,43 +264,43 @@
         
 ########################################################################################     
 
-#    - name: Start VirtualMachine "{{ name }}"
-#      kubernetes.core.k8s:
-#        state: patched
-#        definition:
-#          apiVersion: kubevirt.io/v1
-#          kind: VirtualMachine
-#          metadata:
-#            name: "{{ name }}"
-#            namespace: "{{ namespace }}"
-#          spec:
-#            running: true
+    - name: Start VirtualMachine "{{ name }}"
+      kubernetes.core.k8s:
+        state: patched
+        definition:
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: "{{ name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            running: true
        
-#    - name: Wait for VM CR to be Ready
-#      kubernetes.core.k8s_info:
-#        api_version: kubevirt.io/v1
-#        kind: VirtualMachine
-#        name: "{{ name }}"
-#        namespace: "{{ namespace }}"
-#      register: vm_info
-#      retries: 60
-#      delay: 10
-#      until:
-#        - vm_info.resources[0].status is defined
-#        - vm_info.resources[0].status.ready | default(false)
+    - name: Wait for VM CR to be Ready
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: vm_info
+      retries: 60
+      delay: 10
+      until:
+        - vm_info.resources[0].status is defined
+        - vm_info.resources[0].status.ready | default(false)
 
-#    - name: Wait for VMI to report an IP
-#      kubernetes.core.k8s_info:
-#        api_version: kubevirt.io/v1
-#        kind: VirtualMachineInstance
-#        name: "{{ name }}"
-#        namespace: "{{ namespace }}"
-#      register: vmi_info
-#      retries: 600
-#      delay: 10
-#      until: >
-#        (vmi_info.resources[0].status.interfaces[0].ipAddress | default('')) | length > 0
+    - name: Wait for VMI to report an IP
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachineInstance
+        name: "{{ name }}"
+        namespace: "{{ namespace }}"
+      register: vmi_info
+      retries: 600
+      delay: 10
+      until: >
+        (vmi_info.resources[0].status.interfaces[0].ipAddress | default('')) | length > 0
 
-#    - name: Confirm VM is Running
-#      ansible.builtin.debug:
-#        msg: "Create VM {{ name }}.{{ fqdn }} completed"
+    - name: Confirm VM is Running
+      ansible.builtin.debug:
+        msg: "Create VM {{ name }}.{{ fqdn }} completed"
