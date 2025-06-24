@@ -206,11 +206,11 @@
 
     - name: Convert 'boot_image_size' from string with Gi to integer
       set_fact:
-        boot_image_size: "{{ original_boot_image_size | regex_replace('Gi', '') | int }}"
+        boot_image_size_int: "{{ boot_image_size | regex_replace('Gi', '') | int }}"
 
-    - name: Show converted boot_image_size
+    - name: Show converted boot_image_size_int
       debug:
-        var: boot_image_size
+        var: boot_image_size_int
 
     - name: Create host in Satellite
       theforeman.foreman.host:
@@ -250,7 +250,7 @@
 
         parameters:
           - name: sda_disk_size
-            value: "{{ boot_image_size }}"
+            value: "{{ boot_image_size_int }}"
             parameter_type: integer
 
         # Specifies the host’s root password
