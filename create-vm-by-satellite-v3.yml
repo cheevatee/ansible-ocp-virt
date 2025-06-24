@@ -240,6 +240,11 @@
         puppet_proxy: "{{ puppet_proxy }}"
         puppet_ca_proxy: "{{ puppet_ca_proxy }}"
 
+        parameters:
+          - name: sda_disk_size
+            value: {{ boot_image_size_int }}
+            parameter_type: integer
+
         # Specifies the host’s root password
         root_pass: 'NewSecureP@ssw0rd'
         
