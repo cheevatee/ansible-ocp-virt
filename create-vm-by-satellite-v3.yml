@@ -173,7 +173,7 @@
                   'subnet': nic_subnet_name
                 }
                 | combine({'name': name ~ '.' ~ fqdn})
-                if app_nic_primary | lower == 'true'
+                if app_nic_primary | lower != 'true'
                 else
                 {
                   'type': nic_type,
