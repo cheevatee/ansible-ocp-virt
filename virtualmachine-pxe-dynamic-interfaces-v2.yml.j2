@@ -29,6 +29,7 @@ spec:
         source:
           blank: {}
         storage:
+          storageClassName: {{ boot_image_sc }}
           resources:
             requests:
               storage: {{ boot_image_size }}
