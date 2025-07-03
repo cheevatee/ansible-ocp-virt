@@ -1,0 +1,15 @@
+---
+- name: Print message every 3 seconds for 20 minutes
+  hosts: localhost
+  gather_facts: false
+  vars:
+    repeat_count: 400  # 20 minutes / 3 seconds = 400 loops
+
+  tasks:
+    - name: Print "Running..." every 3 seconds
+      ansible.builtin.shell: |
+        echo "Running iteration {{ item }}"
+        sleep 3
+      loop: "{{ range(1, repeat_count + 1) | list }}"
+      loop_control:
+        label: "{{ item }}"
